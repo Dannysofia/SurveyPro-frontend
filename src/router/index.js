@@ -4,6 +4,10 @@ import VistaUser from "@/views/VistaUser.vue";
 import VistaDos from "@/views/VistaDos.vue";
 import SurveyList from "@/views/surveys/SurveyList.vue";
 import SurveyEditor from "@/views/surveys/SurveyEditor.vue";
+import SurveyResponsesList from "@/views/surveys/SurveyResponsesList.vue";
+import SurveyResponseDetail from "@/views/surveys/SurveyResponseDetail.vue";
+import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
+import ResponsesDashboard from "@/views/surveys/ResponsesDashboard.vue";
 const routes = [
   {
     path: "/",
@@ -26,9 +30,29 @@ const routes = [
         component: SurveyList,
       },
       {
+        path: "/respuestas",
+        name: "responses-dashboard",
+        component: ResponsesDashboard,
+      },
+      {
         path: "/encuestas/nueva",
         name: "survey-editor",
         component: SurveyEditor,
+      },
+      {
+        path: "/encuestas/:id/respuestas",
+        name: "survey-responses",
+        component: SurveyResponsesList,
+      },
+      {
+        path: "/encuestas/:id/respuestas/:responseId",
+        name: "survey-response-detail",
+        component: SurveyResponseDetail,
+      },
+      {
+        path: "/encuestas/:id/responder",
+        name: "survey-answer",
+        component: SurveyAnswer,
       },
     ],
   },

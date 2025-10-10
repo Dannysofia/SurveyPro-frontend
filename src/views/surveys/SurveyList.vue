@@ -23,6 +23,9 @@
         </div>
         <footer class="card-actions">
           <button class="btn btn-ghost" @click="preview(s)">Vista previa</button>
+          <button class="btn btn-ghost" @click="openResponses(s)">Ver respuestas</button>
+          <button class="btn btn-ghost" @click="goAnswer(s)" :disabled="!s.active">Responder</button>
+          <button class="btn" :class="s.active ? 'btn-danger' : 'btn-primary'" @click="toggleStatus(s)">{{ s.active ? 'Cerrar' : 'Abrir' }}</button>
           <button class="btn btn-danger" @click="confirmDelete(s)">Eliminar</button>
         </footer>
       </article>
@@ -45,7 +48,7 @@ import { useRouter } from 'vue-router';
 import { useSurveys } from '@/store/surveys';
 
 const router = useRouter();
-const { list, removeSurvey } = useSurveys();
+const { list, removeSurvey, setActive } = useSurveys();
 const items = computed(() => list().value);
 
 const toDelete = ref(null);
@@ -57,6 +60,16 @@ function goCreate() {
 
 function preview(s) {
   router.push({ name: 'survey-editor', query: { preview: '1' }, state: { draft: s } });
+}
+
+function openResponses(s) {
+  router.push({ name: 'survey-responses', params: { id: s.id } });
+}
+function goAnswer(s) {
+  router.push({ name: 'survey-answer', params: { id: s.id } });
+}
+function toggleStatus(s) {
+  setActive(s.id, !s.active);
 }
 
 function confirmDelete(s) {
