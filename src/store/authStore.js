@@ -1,4 +1,3 @@
-// src/store/authStore.js
 import { defineStore } from 'pinia';
 import { api, setAuthToken } from '@/api';
 

@@ -9,9 +9,9 @@
         <input v-model="correo" class="input" type="email" placeholder="tucorreo@ejemplo.com" />
       </div>
 
-      <div class="field">
+      <div class="field" style="position: relative;">
         <label class="label">Contraseña</label>
-        <input v-model="password" class="input" type="password" placeholder="••••••••" />
+        <input v-model="password" type="password" class="input" placeholder="••••••••"/>
       </div>
 
       <p v-if="error" class="error">{{ error }}</p>

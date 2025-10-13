@@ -69,8 +69,8 @@ async function onRegister() {
     error.value = 'Correo inválido';
     return;
   }
-  if (password.value.length < 4) {
-    error.value = 'La contraseña debe tener al menos 4 caracteres';
+  if (password.value.length < 8) {
+    error.value = 'La contraseña debe tener al menos 8 caracteres';
     return;
   }
 
