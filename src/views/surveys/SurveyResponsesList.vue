@@ -49,15 +49,20 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useSurveys } from '@/store/surveys';
+import { useSurveys } from '@/store/surveysStore';
+import { onMounted } from 'vue';
 
 const route = useRoute();
 const router = useRouter();
-const { getById, listResponses } = useSurveys();
+const { getById, getByIdAsync, listResponses } = useSurveys();
 
 const surveyId = computed(() => String(route.params.id || ''));
 const survey = computed(() => getById(surveyId.value));
 const all = computed(() => listResponses(surveyId.value));
+
+onMounted(async () => {
+  if (surveyId.value) await getByIdAsync(surveyId.value);
+});
 
 const page = ref(1);
 const pageSize = 10;

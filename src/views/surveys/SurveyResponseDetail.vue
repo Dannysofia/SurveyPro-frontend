@@ -42,16 +42,21 @@
 <script setup>
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { useSurveys } from '@/store/surveys';
+import { useSurveys } from '@/store/surveysStore';
+import { onMounted } from 'vue';
 
 const route = useRoute();
 const router = useRouter();
-const { getById, getResponse } = useSurveys();
+const { getById, getByIdAsync, getResponse } = useSurveys();
 
 const surveyId = computed(() => String(route.params.id || ''));
 const responseId = computed(() => String(route.params.responseId || ''));
 const survey = computed(() => getById(surveyId.value));
 const response = computed(() => getResponse(surveyId.value, responseId.value));
+
+onMounted(async () => {
+  if (surveyId.value) await getByIdAsync(surveyId.value);
+});
 
 function goBack(){ router.push({ name: 'survey-responses', params: { id: surveyId.value } }); }
 

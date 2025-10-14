@@ -32,7 +32,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { useSurveys } from '@/store/surveys';
+import { useSurveys } from '@/store/surveysStore';
 
 const router = useRouter();
 const { list, listResponses } = useSurveys();

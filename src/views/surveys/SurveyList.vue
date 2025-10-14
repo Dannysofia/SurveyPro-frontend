@@ -45,7 +45,7 @@
 // styles are loaded globally in main.js
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useSurveys } from '@/store/surveys';
+import { useSurveys } from '@/store/surveysStore';
 
 const router = useRouter();
 const { list, removeSurvey, setActive } = useSurveys();

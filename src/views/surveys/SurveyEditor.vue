@@ -77,9 +77,7 @@
           <div class="row-wrap">
             <label class="label">Tipo</label>
             <select class="input" v-model="q.type">
-              <option value="open">Abierta</option>
-              <option value="single">Opción única</option>
-              <option value="multiple">Opción múltiple</option>
+              <option v-for="t in questionTypeOptions" :key="t.key" :value="t.key">{{ t.label }}</option>
             </select>
 
             <label class="row" style="gap:6px;">
@@ -154,12 +152,15 @@
 
 <script setup>
 // styles are loaded globally in main.js
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useSurveys } from '@/store/surveys';
+import { useSurveys } from '@/store/surveysStore';
+import { useAuthStore } from '@/store/authStore';
+import { fetchQuestionTypes, mapTypeKeyToUi } from '@/services/questionTypes';
 
 const router = useRouter();
 const { createSurvey, validateGeneral, validateQuestions, newQuestion, newOption } = useSurveys();
+const auth = useAuthStore();
 
 const form = reactive({
   title: '',
@@ -175,6 +176,29 @@ const titleError = computed(() => validateGeneral(form).errors.title || '');
 const canNextGeneral = computed(() => validateGeneral(form).ok);
 const canNextQuestions = computed(() => validateQuestions(form.questions).ok);
 
+// Tipos de pregunta desde backend
+const questionTypeOptions = ref([]);
+onMounted(async () => {
+  try {
+    const types = await fetchQuestionTypes();
+    const mapped = Array.isArray(types)
+      ? types.map(t => ({ key: mapTypeKeyToUi(t.type_key), label: t.label }))
+      : [];
+    const seen = new Set();
+    questionTypeOptions.value = mapped.filter(t => {
+      if (seen.has(t.key)) return false;
+      seen.add(t.key);
+      return true;
+    });
+  } catch (e) {
+    // Fallback por si falla la API
+    questionTypeOptions.value = [
+      { key: 'open', label: 'Abierta' },
+      { key: 'single', label: 'Opción única' },
+      { key: 'multiple', label: 'Opción múltiple' },
+    ];
+  }
+});
 function next() { if (step.value < 2) step.value = step.value + 1; }
 function prev() { if (step.value > 0) step.value = step.value - 1; }
 
@@ -229,4 +253,26 @@ function discard() {
     router.push('/encuestas');
   }
 }
+// Implementación nueva de guardado que usa backend y owner_id del auth store
+const saveAsync = async () => {
+  const gen = validateGeneral(form);
+  const qs = validateQuestions(form.questions);
+  if (!gen.ok) { alert('Completa el título'); return; }
+  if (!qs.ok) { alert(qs.reason || 'Revisa las preguntas'); return; }
+  try {
+    const ownerId = auth.user?.id;
+    if (!ownerId) { alert('Debes iniciar sesión para crear encuestas'); return; }
+    await createSurvey(form, { ownerId });
+    alert('Encuesta guardada');
+    router.push('/encuestas');
+  } catch (e) {
+    alert(String(e?.response?.data?.error || e.message || e));
+  }
+};
+
+// Sombra la función existente para no tocar el template
+// eslint-disable-next-line no-unused-vars
+let _oldSave = save;
+// eslint-disable-next-line no-func-assign
+save = saveAsync;
 </script>
