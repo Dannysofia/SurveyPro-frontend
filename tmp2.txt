@@ -1,0 +1,123 @@
+const questionTypeOptions = ref([]);
+onMounted(async () => {
+  try {
+    const types = await fetchQuestionTypes();
+    const mapped = Array.isArray(types)
+      ? types.map((t) => ({ key: mapTypeKeyToUi(t.type_key), label: t.label }))
+      : [];
+    const seen = new Set();
+    questionTypeOptions.value = mapped.filter((t) => {
+      if (seen.has(t.key)) return false;
+      seen.add(t.key);
+      return true;
+    });
+  } catch (e) {
+    // Fallback por si falla la API
+    questionTypeOptions.value = [
+      { key: "open", label: "Abierta" },
+      { key: "single", label: "OpciÃ³n Ãºnica" },
+      { key: "multiple", label: "OpciÃ³n mÃºltiple" },
+    ];
+  }
+});
+function next() {
+  if (step.value < 2) step.value = step.value + 1;
+}
+function prev() {
+  if (step.value > 0) step.value = step.value - 1;
+}
+
+/**function goBack() {
+  router.push("/encuestas");
+}**/
+
+function onLogo(ev) {
+  const file = ev.target.files?.[0];
+  if (!file) return;
+  const valid =
+    ["image/png", "image/jpeg"].includes(file.type) && file.size <= 1024 * 1024;
+  if (!valid) {
+    alert("Logo invÃ¡lido. Use PNG/JPG menor a 1MB");
+    ev.target.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    form.logoDataUrl = String(reader.result || "");
+  };
+  reader.readAsDataURL(file);
+}
+
+function addQuestion() {
+  form.questions.push(newQuestion());
+}
+function removeQuestion(index) {
+  form.questions.splice(index, 1);
+}
+function move(index, delta) {
+  const to = index + delta;
+  if (to < 0 || to >= form.questions.length) return;
+  const [q] = form.questions.splice(index, 1);
+  form.questions.splice(to, 0, q);
+}
+function addOption(q) {
+  if (!q.options) q.options = [];
+  q.options.push(newOption());
+}
+function removeOption(q, k) {
+  q.options.splice(k, 1);
+}
+
+function save() {
+  const gen = validateGeneral(form);
+  const qs = validateQuestions(form.questions);
+  if (!gen.ok) {
+    alert("Completa el tÃ­tulo");
+    return;
+  }
+  if (!qs.ok) {
+    alert(qs.reason || "Revisa las preguntas");
+    return;
+  }
+  createSurvey(form);
+  alert("Encuesta guardada");
+  router.push("/encuestas");
+}
+
+function discard() {
+  if (confirm('Â¿Descartar esta encuesta?')) {
+    router.push('/encuestas');
+  }
+}
+// ImplementaciÃ³n nueva de guardado que usa backend y owner_id del auth store
+const saveAsync = async () => {
+  const gen = validateGeneral(form);
+  const qs = validateQuestions(form.questions);
+  if (!gen.ok) {
+    alert("Completa el tÃ­tulo");
+    return;
+  }
+  if (!qs.ok) {
+    alert(qs.reason || "Revisa las preguntas");
+    return;
+  }
+  try {
+    const ownerId = auth.user?.id;
+    if (!ownerId) {
+      alert("Debes iniciar sesiÃ³n para crear encuestas");
+      return;
+    }
+    await createSurvey(form, { ownerId });
+    alert("Encuesta guardada");
+    router.push("/encuestas");
+  } catch (e) {
+    alert(String(e?.response?.data?.error || e.message || e));
+  }
+};
+
+// Sombra la funciÃ³n existente para no tocar el template
+// eslint-disable-next-line no-unused-vars
+let _oldSave = save;
+// eslint-disable-next-line no-func-assign
+save = saveAsync;
+</script>

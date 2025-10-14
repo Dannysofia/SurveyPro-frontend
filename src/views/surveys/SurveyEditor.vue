@@ -2,29 +2,39 @@
   <section>
     <header class="editor-header">
       <div class="row">
-        <button class="btn btn-ghost" @click="goBack">Volver</button>
         <h1 class="title">Nueva encuesta</h1>
       </div>
-      <button class="btn btn-danger" @click="discard">Eliminar</button>
+      <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+      />
     </header>
 
     <nav class="steps">
-      <span :class="['step', { active: step === 0 }]">1. General</span>
-      <span :class="['step', { active: step === 1 }]">2. Preguntas</span>
-      <span :class="['step', { active: step === 2 }]">3. Vista previa</span>
+      <span :class="['step', { active: step === 0 }]">General</span>
+      <span :class="['step', { active: step === 1 }]">Preguntas</span>
+      <span :class="['step', { active: step === 2 }]">Vista previa</span>
     </nav>
 
     <div v-if="step === 0" class="card">
       <div class="form-grid">
         <div class="form-col">
           <label class="label">Título *</label>
-          <input class="input" v-model="form.title" type="text" placeholder="Mi encuesta" />
-          <p v-if="titleError" class="error">{{ titleError }}</p>
+          <input
+            class="input"
+            v-model="form.title"
+            type="text"
+            placeholder="Mi encuesta"
+            @blur="touched.title = true"
+          />
+          <p v-if="showTitleError" class="error">{{ titleError }}</p>
 
           <label class="label">Descripción</label>
-          <textarea class="input" v-model="form.description" rows="3"></textarea>
-
-          
+          <textarea
+            class="input"
+            v-model="form.description"
+            rows="3"
+          ></textarea>
         </div>
       </div>
       <div class="section">
@@ -36,8 +46,20 @@
           </div>
           <div class="personal-item">
             <label class="label">Logo</label>
-            <input class="file" type="file" accept="image/png, image/jpeg" @change="onLogo" />
-            <small>PNG/JPG, hasta 1MB</small>
+            <!-- Input oculto y label estilizado como botón -->
+            <input
+              id="logoFile"
+              class="file-input"
+              type="file"
+              accept="image/png, image/jpeg"
+              @change="onLogo"
+              hidden
+            />
+            <label class="upload-btn" for="logoFile">
+              <i class="fas fa-upload"></i>
+              Cargar archivo
+            </label>
+            <br><small>PNG/JPG</small>
             <div v-if="form.logoDataUrl" class="logo-preview">
               <img :src="form.logoDataUrl" alt="logo" />
             </div>
@@ -46,7 +68,14 @@
       </div>
 
       <footer class="actions">
-        <button class="btn btn-primary" :disabled="!canNextGeneral" @click="next">Siguiente</button>
+        <button class="btn btn-secondary" @click="discard()">Cancelar</button>
+        <button
+          class="btn btn-primary"
+          :disabled="!canNextGeneral"
+          @click="next"
+        >
+          Siguiente
+        </button>
       </footer>
     </div>
 
@@ -94,7 +123,7 @@
             <div v-else class="stack-sm">
               <div v-for="(opt, k) in q.options" :key="opt.id" class="option-row">
                 <input class="input flex1" v-model="opt.text" type="text" placeholder="Opción" />
-                <button class="btn btn-danger btn-sm" @click="removeOption(q, k)">✕</button>
+                <button class="btn btn-danger btn-sm" @click="removeOption(q, k)">×</button>
               </div>
             </div>
           </div>
@@ -110,35 +139,58 @@
     <div v-else-if="step === 2" class="card">
       <header class="between">
         <h3 class="title">Vista previa</h3>
-        <div>
-          <button class="btn btn-ghost mr-8" @click="prev">Volver a editar</button>
-          <button class="btn btn-primary" @click="save">Guardar</button>
-        </div>
       </header>
 
       <div class="preview">
-        <div class="preview-accent" :style="{ background: form.color || 'var(--primary)' }"></div>
+        <div
+          class="preview-accent"
+          :style="{ background: form.color || 'var(--primary)' }"
+        ></div>
         <div class="pad-12">
           <div class="row-10">
-            <img v-if="form.logoDataUrl" :src="form.logoDataUrl" alt="logo" class="preview-logo"/>
+            <img
+              v-if="form.logoDataUrl"
+              :src="form.logoDataUrl"
+              alt="logo"
+              class="preview-logo"
+            />
             <h2 class="title">{{ form.title }}</h2>
           </div>
           <p class="muted">{{ form.description }}</p>
 
           <div class="stack mt-8">
-            <div v-for="(q, idx) in form.questions" :key="q.id" class="preview-q">
+            <div
+              v-for="(q, idx) in form.questions"
+              :key="q.id"
+              class="preview-q"
+            >
               <strong>{{ idx + 1 }}. {{ q.text }}</strong>
               <span v-if="q.required" class="error ml-6">*</span>
               <div v-if="q.type === 'open'" class="mt-6">
-                <input type="text" disabled placeholder="Respuesta abierta" class="input" />
+                <input
+                  type="text"
+                  disabled
+                  placeholder="Respuesta abierta"
+                  class="input"
+                />
               </div>
               <div v-else-if="q.type === 'single'" class="stack-sm mt-6">
-                <label v-for="o in q.options" :key="o.id" class="row" style="gap:6px;">
+                <label
+                  v-for="o in q.options"
+                  :key="o.id"
+                  class="row"
+                  style="gap: 6px"
+                >
                   <input type="radio" disabled /> {{ o.text }}
                 </label>
               </div>
               <div v-else-if="q.type === 'multiple'" class="stack-sm mt-6">
-                <label v-for="o in q.options" :key="o.id" class="row" style="gap:6px;">
+                <label
+                  v-for="o in q.options"
+                  :key="o.id"
+                  class="row"
+                  style="gap: 6px"
+                >
                   <input type="checkbox" disabled /> {{ o.text }}
                 </label>
               </div>
@@ -146,32 +198,47 @@
           </div>
         </div>
       </div>
+      <footer class="actions">
+        <button class="btn btn-ghost" @click="prev">Atrás</button>
+        <button class="btn btn-primary" @click="save">Guardar</button>
+      </footer>
     </div>
   </section>
 </template>
 
 <script setup>
 // styles are loaded globally in main.js
-import { reactive, ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { useSurveys } from '@/store/surveysStore';
-import { useAuthStore } from '@/store/authStore';
-import { fetchQuestionTypes, mapTypeKeyToUi } from '@/services/questionTypes';
+import { reactive, ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useSurveys } from "@/store/surveysStore";
+import { useAuthStore } from "@/store/authStore";
+import { fetchQuestionTypes, mapTypeKeyToUi } from "@/services/questionTypes";
 
 const router = useRouter();
-const { createSurvey, validateGeneral, validateQuestions, newQuestion, newOption } = useSurveys();
+const {
+  createSurvey,
+  validateGeneral,
+  validateQuestions,
+  newQuestion,
+  newOption,
+} = useSurveys();
 const auth = useAuthStore();
 
 const form = reactive({
-  title: '',
-  description: '',
-  color: '#4f46e5',
-  logoDataUrl: '',
+  title: "",
+  description: "",
+  color: "#4f46e5",
+  logoDataUrl: "",
   questions: [],
 });
 
 const step = ref(0);
-const titleError = computed(() => validateGeneral(form).errors.title || '');
+const titleError = computed(() => validateGeneral(form).errors.title || "");
+// Mostrar errores solo cuando el usuario interactúe
+const touched = reactive({ title: false });
+const showTitleError = computed(
+  () => Boolean(titleError.value) && touched.title
+);
 
 const canNextGeneral = computed(() => validateGeneral(form).ok);
 const canNextQuestions = computed(() => validateQuestions(form.questions).ok);
@@ -182,10 +249,10 @@ onMounted(async () => {
   try {
     const types = await fetchQuestionTypes();
     const mapped = Array.isArray(types)
-      ? types.map(t => ({ key: mapTypeKeyToUi(t.type_key), label: t.label }))
+      ? types.map((t) => ({ key: mapTypeKeyToUi(t.type_key), label: t.label }))
       : [];
     const seen = new Set();
-    questionTypeOptions.value = mapped.filter(t => {
+    questionTypeOptions.value = mapped.filter((t) => {
       if (seen.has(t.key)) return false;
       seen.add(t.key);
       return true;
@@ -193,28 +260,37 @@ onMounted(async () => {
   } catch (e) {
     // Fallback por si falla la API
     questionTypeOptions.value = [
-      { key: 'open', label: 'Abierta' },
-      { key: 'single', label: 'Opción única' },
-      { key: 'multiple', label: 'Opción múltiple' },
+      { key: "open", label: "Abierta" },
+      { key: "single", label: "Opción única" },
+      { key: "multiple", label: "Opción múltiple" },
     ];
   }
 });
-function next() { if (step.value < 2) step.value = step.value + 1; }
-function prev() { if (step.value > 0) step.value = step.value - 1; }
+function next() {
+  if (step.value < 2) step.value = step.value + 1;
+}
+function prev() {
+  if (step.value > 0) step.value = step.value - 1;
+}
 
-function goBack() { router.push('/encuestas'); }
+/**function goBack() {
+  router.push("/encuestas");
+}**/
 
 function onLogo(ev) {
   const file = ev.target.files?.[0];
   if (!file) return;
-  const valid = ['image/png', 'image/jpeg'].includes(file.type) && file.size <= 1024 * 1024;
+  const valid =
+    ["image/png", "image/jpeg"].includes(file.type) && file.size <= 1024 * 1024;
   if (!valid) {
-    alert('Logo inválido. Use PNG/JPG menor a 1MB');
-    ev.target.value = '';
+    alert("Logo inválido. Use PNG/JPG menor a 1MB");
+    ev.target.value = "";
     return;
   }
   const reader = new FileReader();
-  reader.onload = () => { form.logoDataUrl = String(reader.result || ''); };
+  reader.onload = () => {
+    form.logoDataUrl = String(reader.result || "");
+  };
   reader.readAsDataURL(file);
 }
 
@@ -241,11 +317,17 @@ function removeOption(q, k) {
 function save() {
   const gen = validateGeneral(form);
   const qs = validateQuestions(form.questions);
-  if (!gen.ok) { alert('Completa el título'); return; }
-  if (!qs.ok) { alert(qs.reason || 'Revisa las preguntas'); return; }
+  if (!gen.ok) {
+    alert("Completa el título");
+    return;
+  }
+  if (!qs.ok) {
+    alert(qs.reason || "Revisa las preguntas");
+    return;
+  }
   createSurvey(form);
-  alert('Encuesta guardada');
-  router.push('/encuestas');
+  alert("Encuesta guardada");
+  router.push("/encuestas");
 }
 
 function discard() {
@@ -257,20 +339,28 @@ function discard() {
 const saveAsync = async () => {
   const gen = validateGeneral(form);
   const qs = validateQuestions(form.questions);
-  if (!gen.ok) { alert('Completa el título'); return; }
-  if (!qs.ok) { alert(qs.reason || 'Revisa las preguntas'); return; }
+  if (!gen.ok) {
+    alert("Completa el título");
+    return;
+  }
+  if (!qs.ok) {
+    alert(qs.reason || "Revisa las preguntas");
+    return;
+  }
   try {
     const ownerId = auth.user?.id;
-    if (!ownerId) { alert('Debes iniciar sesión para crear encuestas'); return; }
+    if (!ownerId) {
+      alert("Debes iniciar sesión para crear encuestas");
+      return;
+    }
     await createSurvey(form, { ownerId });
-    alert('Encuesta guardada');
-    router.push('/encuestas');
+    alert("Encuesta guardada");
+    router.push("/encuestas");
   } catch (e) {
     alert(String(e?.response?.data?.error || e.message || e));
   }
 };
 
-// Sombra la función existente para no tocar el template
 // eslint-disable-next-line no-unused-vars
 let _oldSave = save;
 // eslint-disable-next-line no-func-assign
