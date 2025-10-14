@@ -1,0 +1,19 @@
+/* src/assets/css/auth.css */
+.auth-wrap {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.auth-title {
+    margin: 0 0 6px;
+}
+
+.auth-sub {
+    color: #64748b;
+    margin: 0 0 12px;
+    font-size: 14px;
+}
+
+.field {
+    margin-top: 10px;
+}

@@ -1,31 +1,38 @@
 import { createRouter, createWebHistory } from "vue-router";
-import MainLayout from "@/layouts/MainLayout.vue";
-import VistaUser from "@/views/VistaUser.vue";
-import VistaDos from "@/views/VistaDos.vue";
+import HomeLayout from "@/layouts/HomeLayout.vue";
+import LoginView from "@/views/users/LoginView.vue";
+import RegisterView from "@/views/users/RegisterView.vue";
 import SurveyList from "@/views/surveys/SurveyList.vue";
 import SurveyEditor from "@/views/surveys/SurveyEditor.vue";
 import SurveyResponsesList from "@/views/surveys/SurveyResponsesList.vue";
 import SurveyResponseDetail from "@/views/surveys/SurveyResponseDetail.vue";
 import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
 import ResponsesDashboard from "@/views/surveys/ResponsesDashboard.vue";
+import HomeSurveyPro from "@/views/HomeSurveyPro.vue";
+
 const routes = [
   {
     path: "/",
     name: "Home",
-    component: MainLayout,
+    component: HomeLayout,
     children: [
       {
         path: "",
-        name: "vistauser",
-        component: VistaUser,
+        name: "home",
+        component: HomeSurveyPro,
       },
       {
-        path: "/vistados",
-        name: "vistados",
-        component: VistaDos,
+        path: "login",
+        name: "login",
+        component: LoginView,
       },
       {
-        path: "/encuestas",
+        path: "register",
+        name: "register",
+        component: RegisterView,
+      },
+      {
+        path: "encuestas",
         name: "surveys",
         component: SurveyList,
       },
@@ -36,6 +43,7 @@ const routes = [
       },
       {
         path: "/encuestas/nueva",
+        path: "encuestas/nueva",
         name: "survey-editor",
         component: SurveyEditor,
       },
