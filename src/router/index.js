@@ -9,6 +9,10 @@ import SurveyResponseDetail from "@/views/surveys/SurveyResponseDetail.vue";
 import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
 import ResponsesDashboard from "@/views/surveys/ResponsesDashboard.vue";
 import HomeSurveyPro from "@/views/HomeSurveyPro.vue";
+import SurveyResponsesList from "@/views/surveys/SurveyResponsesList.vue";
+import SurveyResponseDetail from "@/views/surveys/SurveyResponseDetail.vue";
+import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
+import ResponsesDashboard from "@/views/surveys/ResponsesDashboard.vue";
 
 const routes = [
   {
