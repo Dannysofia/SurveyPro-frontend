@@ -29,5 +29,5 @@
 </template>
 
 <script setup>
-import '@/assets/css/home.css'; // estilos específicos del home
+import '@/assets/css/home.css';
 </script>

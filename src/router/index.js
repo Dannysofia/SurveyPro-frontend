@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomeLayout from "@/layouts/HomeLayout.vue";
 import LoginView from "@/views/users/LoginView.vue";
 import RegisterView from "@/views/users/RegisterView.vue";
+import SurveyHome from "@/views/surveys/SurveyHome.vue";
 import SurveyList from "@/views/surveys/SurveyList.vue";
 import SurveyCreate from "@/views/surveys/SurveyCreate.vue";
 import SurveyEdit from "@/views/surveys/SurveyEdit.vue";
@@ -32,6 +33,11 @@ const routes = [
         path: "register",
         name: "register",
         component: RegisterView,
+      },
+      {
+        path: "inicio",
+        name: "survey-home",
+        component: SurveyHome,
       },
       {
         path: "encuestas",
