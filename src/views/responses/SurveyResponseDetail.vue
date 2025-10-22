@@ -43,11 +43,13 @@
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSurveys } from '@/store/surveysStore';
+import { useResponses } from '@/store/responsesStore';
 import { onMounted } from 'vue';
 
 const route = useRoute();
 const router = useRouter();
-const { getById, getByIdAsync, getResponse } = useSurveys();
+const { getById, getByIdAsync } = useSurveys();
+const { getResponse, loadResponseDetail } = useResponses();
 
 const surveyId = computed(() => String(route.params.id || ''));
 const responseId = computed(() => String(route.params.responseId || ''));
@@ -56,6 +58,7 @@ const response = computed(() => getResponse(surveyId.value, responseId.value));
 
 onMounted(async () => {
   if (surveyId.value) await getByIdAsync(surveyId.value);
+  if (surveyId.value && responseId.value) await loadResponseDetail(surveyId.value, responseId.value);
 });
 
 function goBack(){ router.push({ name: 'survey-responses', params: { id: surveyId.value } }); }

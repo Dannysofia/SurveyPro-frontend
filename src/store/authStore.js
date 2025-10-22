@@ -28,7 +28,9 @@ export const useAuthStore = defineStore('auth', {
             try {
                 this.loading = true;
                 this.error = null;
-                const { data } = await api.post('/auth/login', { correo, password });
+                // Enviar ambos nombres de campo para compatibilidad con backend
+                // que use 'email' o 'correo'.
+                const { data } = await api.post('/auth/login', { correo, email: correo, password });
                 this.user = data.user;
                 this.token = data.token;
                 setAuthToken(data.token);
