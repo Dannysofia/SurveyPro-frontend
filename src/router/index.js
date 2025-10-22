@@ -3,7 +3,8 @@ import HomeLayout from "@/layouts/HomeLayout.vue";
 import LoginView from "@/views/users/LoginView.vue";
 import RegisterView from "@/views/users/RegisterView.vue";
 import SurveyList from "@/views/surveys/SurveyList.vue";
-import SurveyEditor from "@/views/surveys/SurveyEditor.vue";
+import SurveyCreate from "@/views/surveys/SurveyCreate.vue";
+import SurveyEdit from "@/views/surveys/SurveyEdit.vue";
 import SurveyResponsesList from "@/views/surveys/SurveyResponsesList.vue";
 import SurveyResponseDetail from "@/views/surveys/SurveyResponseDetail.vue";
 import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
@@ -44,8 +45,13 @@ const routes = [
       },
       {
         path: "/encuestas/nueva",
-        name: "survey-editor",
-        component: SurveyEditor,
+        name: "survey-create",
+        component: SurveyCreate,
+      },
+      {
+        path: "/encuestas/:id/editar",
+        name: "survey-edit",
+        component: SurveyEdit,
       },
       {
         path: "/encuestas/:id/respuestas",

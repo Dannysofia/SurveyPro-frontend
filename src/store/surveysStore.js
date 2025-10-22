@@ -1,8 +1,4 @@
 // Store de encuestas basado en servicios HTTP.
-// Responsabilidad: cache/estado, validaciones UI y mapeo DTO -> UI.
-// Nota: las respuestas aún viven en localStorage (sección al final) hasta que
-// el backend exponga endpoints para persistirlas.
-
 import { ref } from "vue";
 import {
   fetchQuestionTypes,
@@ -19,18 +15,17 @@ import {
   createOption,
 } from "@/services/surveysServices";
 
-// Cache de encuestas para UI
+// Cache reactivo de encuestas
 const surveys = ref([]);
 let surveysLoaded = false;
 
-// Mapeos DTO -> UI
+// Mapeo DTO -> UI
 function mapSurveyDtoToUi(dto) {
   return {
     id: dto.survey_id,
     title: dto.title,
     description: dto.description || "",
-    color: "#4f46e5",
-    logoDataUrl: "",
+    color: dto.color || "#4f46e5",
     active: String(dto.status || "").toLowerCase() === "activo",
     createdAt: dto.created_at,
     questions: [],
@@ -68,14 +63,15 @@ export function useSurveys() {
 
   async function createSurvey(payload, { ownerId } = {}) {
     const title = payload.title?.trim() || "";
-    if (!title) throw new Error("Título requerido");
+    if (!title) throw new Error("Titulo requerido");
 
-    // 1) Crear encuesta básica
+    // 1) Crear encuesta
     const created = await createSurveyApi({
       owner_id: ownerId || null,
       title,
       description: payload.description?.trim() || null,
       status: "Activo",
+      color: payload.color || "#4f46e5",
     });
     const surveyUi = mapSurveyDtoToUi(created);
 
@@ -83,7 +79,7 @@ export function useSurveys() {
     await fetchQuestionTypes();
     const typeMap = await getTypeIdByKeyMap();
 
-    // 3) Crear preguntas y opciones en backend
+    // 3) Crear preguntas y opciones
     const questions = Array.isArray(payload.questions) ? payload.questions : [];
     const createdQuestions = [];
     for (let i = 0; i < questions.length; i++) {
@@ -168,33 +164,51 @@ export function useSurveys() {
     return true;
   }
 
+  // Actualiza datos generales de la encuesta (título, descripción, color, status opcional)
+  async function updateGeneral(id, payload) {
+    const body = {
+      title: payload.title ?? undefined,
+      description: payload.description ?? undefined,
+      color: payload.color ?? undefined,
+      status: payload.status ?? undefined,
+    };
+    const updated = await updateSurvey(id, body);
+    const idx = surveys.value.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      surveys.value[idx] = {
+        ...surveys.value[idx],
+        title: updated.title ?? surveys.value[idx].title,
+        description: updated.description ?? surveys.value[idx].description,
+        color: updated.color ?? surveys.value[idx].color,
+        active: typeof updated.status === 'string' ? (String(updated.status).toLowerCase() === 'activo') : surveys.value[idx].active,
+      };
+    }
+    return surveys.value[idx] || null;
+  }
+
   // Validaciones UI
-  function validateGeneral({ title, logoDataUrl }) {
+  function validateGeneral({ title }) {
     const hasTitle = Boolean(title && title.trim().length > 0);
-    const logoOk = typeof logoDataUrl === "string" || logoDataUrl === "";
     return {
-      ok: hasTitle && logoOk,
-      errors: { title: !hasTitle ? "Título requerido" : "" },
+      ok: hasTitle,
+      errors: { title: !hasTitle ? "Titulo requerido" : "" },
     };
   }
 
   function validateQuestions(questions) {
-    if (!Array.isArray(questions) || questions.length === 0) {
+    if (!Array.isArray(questions) || questions.length === 0)
       return { ok: false, reason: "Debe existir al menos una pregunta" };
-    }
     for (const q of questions) {
       if (!q.text || !q.text.trim())
-        return { ok: false, reason: "Texto de pregunta vacío" };
+        return { ok: false, reason: "Texto de pregunta vacio" };
       if (q.type === "single" || q.type === "multiple") {
-        if (!Array.isArray(q.options) || q.options.length < 2) {
+        if (!Array.isArray(q.options) || q.options.length < 2)
           return {
             ok: false,
-            reason: "Preguntas cerradas requieren mínimo 2 opciones",
+            reason: "Preguntas cerradas requieren minimo 2 opciones",
           };
-        }
-        if (q.options.some((o) => !o.text || !o.text.trim())) {
-          return { ok: false, reason: "Opciones no pueden estar vacías" };
-        }
+        if (q.options.some((o) => !o.text || !o.text.trim()))
+          return { ok: false, reason: "Opciones no pueden estar vacias" };
       }
     }
     return { ok: true };
@@ -214,7 +228,7 @@ export function useSurveys() {
     return { id: createOptionId(), text: "" };
   }
 
-  // Responses API (LocalStorage) — se mantiene aquí hasta que el backend tenga endpoints
+  // Respuestas (LocalStorage)
   function listResponses(surveyId) {
     const arr = responses.value[surveyId] || [];
     const map = new Map();
@@ -226,18 +240,16 @@ export function useSurveys() {
       (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
     );
   }
-
   function getResponse(surveyId, responseId) {
     return (
       (responses.value[surveyId] || []).find((r) => r.id === responseId) || null
     );
   }
-
   function submitResponse(surveyId, answersByQuestionId) {
     const s = getById(surveyId);
     if (!s) throw new Error("Encuesta no encontrada");
     if (!s.active)
-      throw new Error("La encuesta está cerrada y no acepta respuestas");
+      throw new Error("La encuesta esta cerrada y no acepta respuestas");
     const missing = [];
     for (const q of s.questions || []) {
       if (!q.required) continue;
@@ -271,6 +283,7 @@ export function useSurveys() {
     getById,
     getByIdAsync,
     setActive,
+    updateGeneral,
     validateGeneral,
     validateQuestions,
     newQuestion,
@@ -287,7 +300,6 @@ export function useSurveys() {
 // =========================
 const RESPONSES_KEY = "survey_responses";
 const responses = ref(loadResponsesFromStorage());
-
 function loadResponsesFromStorage() {
   try {
     const raw = localStorage.getItem(RESPONSES_KEY);
@@ -297,11 +309,9 @@ function loadResponsesFromStorage() {
     return {};
   }
 }
-
 function persistResponses() {
   localStorage.setItem(RESPONSES_KEY, JSON.stringify(responses.value));
 }
-
 function createResponseId() {
   return "r_" + Math.random().toString(36).slice(2, 9);
 }

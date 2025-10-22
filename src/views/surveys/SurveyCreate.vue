@@ -1,13 +1,9 @@
-<template>
+﻿<template>
   <section>
     <header class="editor-header">
       <div class="row">
         <h1 class="title">Nueva encuesta</h1>
       </div>
-      <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
-      />
     </header>
 
     <nav class="steps">
@@ -44,31 +40,11 @@
             <label class="label">Color</label>
             <input class="color" v-model="form.color" type="color" />
           </div>
-          <div class="personal-item">
-            <label class="label">Logo</label>
-            <!-- Input oculto y label estilizado como botón -->
-            <input
-              id="logoFile"
-              class="file-input"
-              type="file"
-              accept="image/png, image/jpeg"
-              @change="onLogo"
-              hidden
-            />
-            <label class="upload-btn" for="logoFile">
-              <i class="fas fa-upload"></i>
-              Cargar archivo
-            </label>
-            <br><small>PNG/JPG</small>
-            <div v-if="form.logoDataUrl" class="logo-preview">
-              <img :src="form.logoDataUrl" alt="logo" />
-            </div>
-          </div>
         </div>
       </div>
 
       <footer class="actions">
-        <button class="btn btn-secondary" @click="discard()">Cancelar</button>
+        <button class="btn btn-secondary" @click="discard">Cancelar</button>
         <button
           class="btn btn-primary"
           :disabled="!canNextGeneral"
@@ -80,23 +56,46 @@
     </div>
 
     <div v-else-if="step === 1" class="card">
-      <header class="between" style="margin-bottom:8px;">
+      <header class="between" style="margin-bottom: 8px">
         <h3 class="title">Preguntas</h3>
-        <button class="btn btn-ghost" @click="addQuestion">Agregar pregunta</button>
+        <button class="btn btn-ghost" @click="addQuestion">
+          Agregar pregunta
+        </button>
       </header>
 
-      <div v-if="form.questions.length === 0" style="padding:8px;border:1px dashed #ccc;border-radius:8px;">
+      <div v-if="form.questions.length === 0" class="empty-tip">
         Agrega al menos una pregunta para continuar.
       </div>
 
-      <div v-else style="display:flex;flex-direction:column;gap:12px;">
-        <div v-for="(q, idx) in form.questions" :key="q.id" class="question-card">
+      <div v-else class="stack">
+        <div
+          v-for="(q, idx) in form.questions"
+          :key="q.id"
+          class="question-card"
+        >
           <div class="between">
             <strong>#{{ idx + 1 }}</strong>
             <div class="question-toolbar">
-              <button class="btn btn-ghost btn-sm" @click="move(idx, -1)" :disabled="idx === 0">Subir</button>
-              <button class="btn btn-ghost btn-sm" @click="move(idx, 1)" :disabled="idx === form.questions.length - 1">Bajar</button>
-              <button class="btn btn-danger btn-sm" @click="removeQuestion(idx)">Eliminar</button>
+              <button
+                class="btn btn-ghost btn-sm"
+                @click="move(idx, -1)"
+                :disabled="idx === 0"
+              >
+                Subir
+              </button>
+              <button
+                class="btn btn-ghost btn-sm"
+                @click="move(idx, 1)"
+                :disabled="idx === form.questions.length - 1"
+              >
+                Bajar
+              </button>
+              <button
+                class="btn btn-danger btn-sm"
+                @click="removeQuestion(idx)"
+              >
+                Eliminar
+              </button>
             </div>
           </div>
 
@@ -106,10 +105,16 @@
           <div class="row-wrap">
             <label class="label">Tipo</label>
             <select class="input" v-model="q.type">
-              <option v-for="t in questionTypeOptions" :key="t.key" :value="t.key">{{ t.label }}</option>
+              <option
+                v-for="t in questionTypeOptions"
+                :key="t.key"
+                :value="t.key"
+              >
+                {{ t.label }}
+              </option>
             </select>
 
-            <label class="row" style="gap:6px;">
+            <label class="row" style="gap: 6px">
               <input type="checkbox" v-model="q.required" /> Obligatoria
             </label>
           </div>
@@ -117,13 +122,31 @@
           <div v-if="q.type === 'single' || q.type === 'multiple'" class="mt-8">
             <div class="between">
               <strong>Opciones</strong>
-              <button class="btn btn-ghost" @click="addOption(q)">Agregar opción</button>
+              <button class="btn btn-ghost" @click="addOption(q)">
+                Agregar opción
+              </button>
             </div>
-            <div v-if="(!q.options || q.options.length === 0)" class="empty-tip">Agrega 2 o más opciones</div>
+            <div v-if="!q.options || q.options.length === 0" class="empty-tip">
+              Agrega 2 o más opciones
+            </div>
             <div v-else class="stack-sm">
-              <div v-for="(opt, k) in q.options" :key="opt.id" class="option-row">
-                <input class="input flex1" v-model="opt.text" type="text" placeholder="Opción" />
-                <button class="btn btn-danger btn-sm" @click="removeOption(q, k)">×</button>
+              <div
+                v-for="(opt, k) in q.options"
+                :key="opt.id"
+                class="option-row"
+              >
+                <input
+                  class="input flex1"
+                  v-model="opt.text"
+                  type="text"
+                  placeholder="Opción"
+                />
+                <button
+                  class="btn btn-danger btn-sm"
+                  @click="removeOption(q, k)"
+                >
+                  ×
+                </button>
               </div>
             </div>
           </div>
@@ -132,15 +155,18 @@
 
       <footer class="actions">
         <button class="btn btn-ghost" @click="prev">Atrás</button>
-        <button class="btn btn-primary" :disabled="!canNextQuestions" @click="next">Siguiente</button>
+        <button
+          class="btn btn-primary"
+          :disabled="!canNextQuestions"
+          @click="next"
+        >
+          Siguiente
+        </button>
       </footer>
     </div>
 
     <div v-else-if="step === 2" class="card">
-      <header class="between">
-        <h3 class="title">Vista previa</h3>
-      </header>
-
+      <header class="between"><h3 class="title">Vista previa</h3></header>
       <div class="preview">
         <div
           class="preview-accent"
@@ -148,12 +174,6 @@
         ></div>
         <div class="pad-12">
           <div class="row-10">
-            <img
-              v-if="form.logoDataUrl"
-              :src="form.logoDataUrl"
-              alt="logo"
-              class="preview-logo"
-            />
             <h2 class="title">{{ form.title }}</h2>
           </div>
           <p class="muted">{{ form.description }}</p>
@@ -228,13 +248,11 @@ const form = reactive({
   title: "",
   description: "",
   color: "#4f46e5",
-  logoDataUrl: "",
   questions: [],
 });
 
 const step = ref(0);
 const titleError = computed(() => validateGeneral(form).errors.title || "");
-// Mostrar errores solo cuando el usuario interactúe
 const touched = reactive({ title: false });
 const showTitleError = computed(
   () => Boolean(titleError.value) && touched.title
@@ -258,7 +276,6 @@ onMounted(async () => {
       return true;
     });
   } catch (e) {
-    // Fallback por si falla la API
     questionTypeOptions.value = [
       { key: "open", label: "Abierta" },
       { key: "single", label: "Opción única" },
@@ -266,32 +283,12 @@ onMounted(async () => {
     ];
   }
 });
+
 function next() {
-  if (step.value < 2) step.value = step.value + 1;
+  if (step.value < 2) step.value++;
 }
 function prev() {
-  if (step.value > 0) step.value = step.value - 1;
-}
-
-/**function goBack() {
-  router.push("/encuestas");
-}**/
-
-function onLogo(ev) {
-  const file = ev.target.files?.[0];
-  if (!file) return;
-  const valid =
-    ["image/png", "image/jpeg"].includes(file.type) && file.size <= 1024 * 1024;
-  if (!valid) {
-    alert("Logo inválido. Use PNG/JPG menor a 1MB");
-    ev.target.value = "";
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = () => {
-    form.logoDataUrl = String(reader.result || "");
-  };
-  reader.readAsDataURL(file);
+  if (step.value > 0) step.value--;
 }
 
 function addQuestion() {
@@ -325,44 +322,20 @@ function save() {
     alert(qs.reason || "Revisa las preguntas");
     return;
   }
-  createSurvey(form);
-  alert("Encuesta guardada");
-  router.push("/encuestas");
+  const ownerId = auth.user?.id;
+  if (!ownerId) {
+    alert("Debes iniciar sesión para crear encuestas");
+    return;
+  }
+  createSurvey(form, { ownerId })
+    .then(() => {
+      alert("Encuesta guardada");
+      router.push("/encuestas");
+    })
+    .catch((e) => alert(String(e?.response?.data?.error || e.message || e)));
 }
 
 function discard() {
-  if (confirm('¿Descartar esta encuesta?')) {
-    router.push('/encuestas');
-  }
+  if (confirm("¿Descartar esta encuesta?")) router.push("/encuestas");
 }
-// Implementación nueva de guardado que usa backend y owner_id del auth store
-const saveAsync = async () => {
-  const gen = validateGeneral(form);
-  const qs = validateQuestions(form.questions);
-  if (!gen.ok) {
-    alert("Completa el título");
-    return;
-  }
-  if (!qs.ok) {
-    alert(qs.reason || "Revisa las preguntas");
-    return;
-  }
-  try {
-    const ownerId = auth.user?.id;
-    if (!ownerId) {
-      alert("Debes iniciar sesión para crear encuestas");
-      return;
-    }
-    await createSurvey(form, { ownerId });
-    alert("Encuesta guardada");
-    router.push("/encuestas");
-  } catch (e) {
-    alert(String(e?.response?.data?.error || e.message || e));
-  }
-};
-
-// eslint-disable-next-line no-unused-vars
-let _oldSave = save;
-// eslint-disable-next-line no-func-assign
-save = saveAsync;
 </script>
