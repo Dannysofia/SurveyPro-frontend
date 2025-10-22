@@ -89,12 +89,6 @@
             </div>
           </div>
           <div class="card-title">
-            <img
-              v-if="s.logoDataUrl"
-              :src="s.logoDataUrl"
-              alt="logo"
-              class="logo"
-            />
             <h3>{{ s.title }}</h3>
           </div>
           <p class="muted">{{ s.description }}</p>
@@ -125,7 +119,7 @@ import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
 
 const router = useRouter();
-const { list, removeSurvey, setActive } = useSurveys();
+const { list, removeSurvey, setActive, listResponses } = useSurveys();
 const items = computed(() => list().value);
 const q = ref("");
 const sortBy = ref("date");
@@ -161,7 +155,12 @@ function goAnswer(s) {
   router.push({ name: "survey-answer", params: { id: s.id } });
 }
 function edit(s) {
-  router.push({ name: "survey-editor", state: { draft: s } });
+  const hasResp = (listResponses(s.id) || []).length > 0;
+  if (hasResp) {
+    alert("Esta encuesta ya tiene respuestas y no puede editarse.");
+    return;
+  }
+  router.push({ name: "survey-edit", params: { id: s.id } });
 }
 function toggleStatus(s) {
   setActive(s.id, !s.active);

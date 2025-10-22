@@ -2,13 +2,23 @@ import { createRouter, createWebHistory } from "vue-router";
 import HomeLayout from "@/layouts/HomeLayout.vue";
 import LoginView from "@/views/users/LoginView.vue";
 import RegisterView from "@/views/users/RegisterView.vue";
+import SurveyHome from "@/views/surveys/SurveyHome.vue";
 import SurveyList from "@/views/surveys/SurveyList.vue";
+<<<<<<< HEAD
 import SurveyEditor from "@/views/surveys/SurveyEditor.vue";
 import SurveyResponsesList from "@/views/responses/SurveyResponsesList.vue";
 import SurveyResponseDetail from "@/views/responses/SurveyResponseDetail.vue";
+=======
+import SurveyCreate from "@/views/surveys/SurveyCreate.vue";
+import SurveyEdit from "@/views/surveys/SurveyEdit.vue";
+import SurveyResponsesList from "@/views/surveys/SurveyResponsesList.vue";
+import SurveyResponseDetail from "@/views/surveys/SurveyResponseDetail.vue";
+>>>>>>> 9e61d1fb3100ba880282ed9ffd466885d8d0ddc0
 import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
 import ResponsesDashboard from "@/views/responses/ResponsesDashboard.vue";
 import HomeSurveyPro from "@/views/HomeSurveyPro.vue";
+import ProfileView from "@/views/users/ProfileView.vue";
+import ProfileEditView from "@/views/users/ProfileEditView.vue";
 
 
 const routes = [
@@ -33,6 +43,21 @@ const routes = [
         component: RegisterView,
       },
       {
+        path: "inicio",
+        name: "survey-home",
+        component: SurveyHome,
+      },
+      {
+        path: "perfil",
+        name: "profile",
+        component: ProfileView,
+      },
+      {
+        path: "perfil/editar",
+        name: "profile-edit",
+        component: ProfileEditView,
+      },
+      {
         path: "encuestas",
         name: "surveys",
         component: SurveyList,
@@ -44,8 +69,13 @@ const routes = [
       },
       {
         path: "/encuestas/nueva",
-        name: "survey-editor",
-        component: SurveyEditor,
+        name: "survey-create",
+        component: SurveyCreate,
+      },
+      {
+        path: "/encuestas/:id/editar",
+        name: "survey-edit",
+        component: SurveyEdit,
       },
       {
         path: "/encuestas/:id/respuestas",

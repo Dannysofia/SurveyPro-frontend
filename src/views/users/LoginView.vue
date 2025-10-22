@@ -51,8 +51,7 @@ async function onLogin() {
   try {
     loading.value = true;
     await auth.login({ correo: correo.value, password: password.value });
-    // FALTA NUEVA PANTALLA
-    router.push({ name: 'surveys' });
+    router.push({ name: 'survey-home' });
   } catch (e) {
     error.value = auth.error || 'No se pudo iniciar sesión';
   } finally {
