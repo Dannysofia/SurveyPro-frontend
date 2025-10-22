@@ -1,6 +1,6 @@
 import { api } from '@/api';
 
-export async function fetchRecentSurveys(limit = 5) {
+export async function fetchRecentSurveys(limit = 6) {
     const { data } = await api.get(`/surveys/recent?limit=${limit}`);
     return data.items || [];
 }

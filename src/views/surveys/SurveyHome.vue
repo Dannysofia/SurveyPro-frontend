@@ -73,7 +73,7 @@ async function loadData() {
         loading.value = true;
         error.value = '';
         const [recent, stats] = await Promise.all([
-            fetchRecentSurveys(5),
+            fetchRecentSurveys(6),
             fetchHomeSummary(),
         ]);
         items.value = recent;
@@ -91,6 +91,6 @@ function goToList() {
 }
 
 function onProfile() {
-    alert('Perfil (pendiente)');
+    router.push({ name: 'profile'});
 }
 </script>

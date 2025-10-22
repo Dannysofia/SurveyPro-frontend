@@ -11,6 +11,8 @@ import SurveyResponseDetail from "@/views/surveys/SurveyResponseDetail.vue";
 import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
 import ResponsesDashboard from "@/views/surveys/ResponsesDashboard.vue";
 import HomeSurveyPro from "@/views/HomeSurveyPro.vue";
+import ProfileView from "@/views/users/ProfileView.vue";
+import ProfileEditView from "@/views/users/ProfileEditView.vue";
 
 
 const routes = [
@@ -38,6 +40,16 @@ const routes = [
         path: "inicio",
         name: "survey-home",
         component: SurveyHome,
+      },
+      {
+        path: "perfil",
+        name: "profile",
+        component: ProfileView,
+      },
+      {
+        path: "perfil/editar",
+        name: "profile-edit",
+        component: ProfileEditView,
       },
       {
         path: "encuestas",

@@ -11,7 +11,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import {  defineProps } from 'vue';
+import { defineProps } from 'vue';
 
 const props = defineProps({
     survey: {
