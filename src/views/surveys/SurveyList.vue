@@ -40,66 +40,17 @@
     </div>
 
     <div v-else class="grid">
-      <article v-for="s in filtered" :key="s.id" class="card survey-card">
-        <div
-          class="card-accent"
-          :style="{ background: s.color || 'var(--primary)' }"
-        ></div>
-        <div class="card-body">
-          <div class="between" style="margin-bottom: 6px">
-            <span
-              :class="['badge', s.active ? 'badge-active' : 'badge-closed']"
-              >{{ s.active ? "Activa" : "Cerrada" }}</span
-            >
-            <div class="card-icons">
-              <button
-                class="icon-btn"
-                @click="edit(s)"
-                aria-label="Editar"
-                title="Editar"
-              >
-                <i class="fas fa-edit"></i>
-              </button>
-              <button
-                class="icon-btn"
-                @click="goAnswer(s)"
-                :disabled="!s.active"
-                aria-label="Responder"
-                title="Responder"
-              >
-                <i class="fas fa-reply"></i>
-              </button>
-              <button
-                class="icon-btn"
-                @click="toggleStatus(s)"
-                :title="s.active ? 'Cerrar' : 'Abrir'"
-                aria-label="Cambiar estado"
-              >
-                <i v-if="s.active" class="fas fa-unlock-keyhole"></i>
-                <i v-else class="fas fa-lock"></i>
-              </button>
-              <button
-                class="icon-btn danger"
-                @click="confirmDelete(s)"
-                aria-label="Eliminar"
-                title="Eliminar"
-              >
-                <i class="fas fa-trash-can"></i>
-              </button>
-            </div>
-          </div>
-          <div class="card-title">
-            <h3>{{ s.title }}</h3>
-          </div>
-          <p class="muted">{{ s.description }}</p>
-          <p class="subtle">{{ formatDate(s.createdAt) }}</p>
-        </div>
-        <footer class="card-actions">
-          <button class="btn btn-primary" @click="openResponses(s)">
-            Ver respuestas
-          </button>
-        </footer>
-      </article>
+      <!-- cambio: usamos el componente <SurveyCard> en lugar del markup inline -->
+      <SurveyCard
+        v-for="s in filtered"
+        :key="s.id"
+        :survey="s"
+        @edit="edit"
+        @answer="goAnswer"
+        @toggle="toggleStatus"
+        @delete="confirmDelete"
+        @open-responses="openResponses"
+      />
     </div>
 
     <dialog ref="dlg" class="dlg">
@@ -117,6 +68,7 @@
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
+import SurveyCard from "@/components/SurveyCard.vue";
 
 const router = useRouter();
 const { list, removeSurvey, setActive, listResponses } = useSurveys();
@@ -177,13 +129,5 @@ function doDelete() {
   if (toDelete.value) removeSurvey(toDelete.value.id);
   toDelete.value = null;
   closeDialog();
-}
-
-function formatDate(iso) {
-  try {
-    return new Date(iso).toLocaleString();
-  } catch {
-    return "";
-  }
 }
 </script>

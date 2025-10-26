@@ -1,4 +1,3 @@
-<!-- src/views/users/ProfileEditView.vue -->
 <template>
     <section>
         <!-- Aviso temporal -->

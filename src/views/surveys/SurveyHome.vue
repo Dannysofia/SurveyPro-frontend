@@ -1,6 +1,7 @@
 <template>
     <section>
-        <!-- fila superior: botón Perfil (sin función por ahora) -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <button class="btn btn-ghost" @click="onProfile">Perfil</button>
         </div>
@@ -24,27 +25,26 @@
             </div>
         </div>
 
-        <!-- Encabezado de “Recientes” -->
+        <!-- Encabezado de recientes -->
         <div class="list-header">
             <h2 style="margin:0;">Encuestas recientes</h2>
-
-            <!-- Si hay al menos una encuesta, el botón aparece aquí -->
-            <button v-if="items.length > 0" class="btn btn-primary" @click="goToList">
+            <button v-if="recentSurveys.length > 0" class="btn btn-primary" @click="goToList">
                 Crear encuesta
             </button>
         </div>
 
-        <!-- Si NO hay encuestas, mostramos un bloque con el botón primero -->
-        <div v-if="items.length === 0" class="card">
+        <!-- Si no hay encuestas -->
+        <div v-if="recentSurveys.length === 0" class="card">
             <div class="card-body">
                 <p class="muted">Aún no tienes encuestas.</p>
                 <button class="btn btn-primary" @click="goToList">Crear encuesta</button>
             </div>
         </div>
 
-        <!-- Grid de cards -->
+        <!-- Grid de encuestas (mismas acciones que en la lista) -->
         <div v-else class="grid">
-            <SurveyCard v-for="s in items" :key="s.survey_id" :survey="s" />
+            <SurveyCard v-for="s in recentSurveys" :key="s.id" :survey="s" @edit="onEdit" @answer="onAnswer"
+                @toggle="onToggle" @delete="onDelete" @open-responses="onOpenResponses" />
         </div>
 
         <p v-if="error" class="error" style="margin-top:8px;">{{ error }}</p>
@@ -52,45 +52,72 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
-import { fetchRecentSurveys, fetchHomeSummary } from '@/store/surveysView.js';
+import { fetchHomeSummary } from '@/store/surveysView.js';
 import SurveySummaryStat from '@/components/SurveySummaryStat.vue';
 import SurveyCard from '@/components/SurveyCard.vue';
+import { useSurveys } from '@/store/surveysStore';
 import '@/assets/css/surveys.css';
 
 const router = useRouter();
 
-const items = ref([]);
+const { list, setActive, removeSurvey, listResponses } = useSurveys();
+
 const summary = ref({ total_surveys: 0, total_responses: 0 });
 const error = ref('');
 const loading = ref(false);
 
-onMounted(loadData);
+const recentSurveys = computed(() => {
+    const items = list().value || [];
+    const sorted = [...items].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return sorted.slice(0, 6);
+});
 
-async function loadData() {
+onMounted(async () => {
     try {
         loading.value = true;
-        error.value = '';
-        const [recent, stats] = await Promise.all([
-            fetchRecentSurveys(6),
-            fetchHomeSummary(),
-        ]);
-        items.value = recent;
+        const stats = await fetchHomeSummary();
         summary.value = stats;
     } catch (e) {
-        error.value = 'No se pudo cargar la información';
         console.error(e);
+        error.value = 'No se pudo cargar la información';
     } finally {
         loading.value = false;
     }
-}
+});
 
 function goToList() {
     router.push({ name: 'surveys' });
 }
 
 function onProfile() {
-    router.push({ name: 'profile'});
+    router.push({ name: 'profile' });
+}
+
+function onOpenResponses(s) {
+    router.push({ name: 'survey-responses', params: { id: s.id } });
+}
+
+function onAnswer(s) {
+    router.push({ name: 'survey-answer', params: { id: s.id } });
+}
+
+function onEdit(s) {
+    const hasResp = (listResponses(s.id) || []).length > 0;
+    if (hasResp) {
+        alert('Esta encuesta ya tiene respuestas y no puede editarse.');
+        return;
+    }
+    router.push({ name: 'survey-edit', params: { id: s.id } });
+}
+
+async function onToggle(s) {
+    await setActive(s.id, !s.active);
+}
+
+async function onDelete(s) {
+    if (!confirm('¿Deseas eliminar esta encuesta?')) return;
+    await removeSurvey(s.id);
 }
 </script>
