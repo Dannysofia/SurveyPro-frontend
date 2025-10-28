@@ -10,7 +10,7 @@ import {
   getSurveyDetail,
   createSurveyApi,
   updateSurvey,
-  deleteSurvey,
+  //deleteSurvey,
   createQuestion,
   createOption,
 } from "@/services/surveysServices";
@@ -118,7 +118,7 @@ export function useSurveys() {
     return surveyUi;
   }
 
-  async function removeSurvey(id) {
+  /**async function removeSurvey(id) {
     await deleteSurvey(id);
     const idx = surveys.value.findIndex((s) => s.id === id);
     if (idx !== -1) surveys.value.splice(idx, 1);
@@ -127,7 +127,7 @@ export function useSurveys() {
       persistResponses();
     }
     return true;
-  }
+  }**/
 
   async function getByIdAsync(id) {
     await ensureLoaded();
@@ -229,7 +229,7 @@ export function useSurveys() {
   }
 
   // Respuestas (LocalStorage)
-  function listResponses(surveyId) {
+  /***function listResponses(surveyId) {
     const arr = responses.value[surveyId] || [];
     const map = new Map();
     for (const r of arr) {
@@ -274,12 +274,12 @@ export function useSurveys() {
     responses.value[surveyId] = arr;
     persistResponses();
     return record;
-  }
+  }**/
 
   return {
     list,
     createSurvey,
-    removeSurvey,
+    //removeSurvey,
     getById,
     getByIdAsync,
     setActive,
@@ -289,12 +289,13 @@ export function useSurveys() {
     newQuestion,
     newOption,
     // responses
-    listResponses,
-    getResponse,
-    submitResponse,
+    //listResponses,
+    //getResponse,
+    //submitResponse,
   };
 }
 
+/***
 // =========================
 // Respuestas (LocalStorage)
 // =========================
@@ -314,7 +315,7 @@ function persistResponses() {
 }
 function createResponseId() {
   return "r_" + Math.random().toString(36).slice(2, 9);
-}
+}**/
 function createOptionId() {
   return "o_" + Math.random().toString(36).slice(2, 9);
 }

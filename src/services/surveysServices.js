@@ -1,4 +1,4 @@
-// Servicios HTTP para encuestas (solo llamadas a API, sin mapeos UI)
+// Servicios HTTP para encuestas (solo llamadas a API)
 // Usa la instancia axios de src/api.js
 import { api } from "@/api";
 

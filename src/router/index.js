@@ -8,7 +8,7 @@ import SurveyEdit from "@/views/surveys/SurveyEdit.vue";
 import SurveyCreate from "@/views/surveys/SurveyCreate.vue";
 import SurveyResponsesList from "@/views/responses/SurveyResponsesList.vue";
 import SurveyResponseDetail from "@/views/responses/SurveyResponseDetail.vue";
-import SurveyAnswer from "@/views/surveys/SurveyAnswer.vue";
+import SurveyAnswer from "@/views/responses/SurveyAnswer.vue";
 import ResponsesDashboard from "@/views/responses/ResponsesDashboard.vue";
 import HomeSurveyPro from "@/views/HomeSurveyPro.vue";
 import ProfileView from "@/views/users/ProfileView.vue";
