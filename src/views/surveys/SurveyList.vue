@@ -64,7 +64,7 @@
 </template>
 
 <script setup>
-// styles are loaded globally in main.js
+
 import { computed, ref, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
@@ -139,13 +139,13 @@ function onSurveyUpdated(e) {
   if (id) getByIdAsync(id, { force: true }).catch(() => {});
 }
 
-if (typeof window !== 'undefined' && window.addEventListener) {
-  window.addEventListener('survey-updated', onSurveyUpdated);
+if (typeof window !== "undefined" && window.addEventListener) {
+  window.addEventListener("survey-updated", onSurveyUpdated);
 }
 
 onBeforeUnmount(() => {
-  if (typeof window !== 'undefined' && window.removeEventListener) {
-    window.removeEventListener('survey-updated', onSurveyUpdated);
+  if (typeof window !== "undefined" && window.removeEventListener) {
+    window.removeEventListener("survey-updated", onSurveyUpdated);
   }
 });
 </script>
