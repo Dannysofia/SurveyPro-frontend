@@ -65,13 +65,15 @@
 
 <script setup>
 // styles are loaded globally in main.js
-import { computed, ref } from "vue";
+import { computed, ref, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
+import { useResponses } from "@/store/responsesStore";
 import SurveyCard from "@/components/SurveyCard.vue";
 
 const router = useRouter();
-const { list, removeSurvey, setActive, listResponses } = useSurveys();
+const { list, removeSurvey, setActive, getByIdAsync } = useSurveys();
+const { listResponses } = useResponses();
 const items = computed(() => list().value);
 const q = ref("");
 const sortBy = ref("date");
@@ -130,4 +132,20 @@ function doDelete() {
   toDelete.value = null;
   closeDialog();
 }
+
+// Escuchar actualizaciones de encuesta y refrescar caché
+function onSurveyUpdated(e) {
+  const id = e?.detail?.id;
+  if (id) getByIdAsync(id, { force: true }).catch(() => {});
+}
+
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener('survey-updated', onSurveyUpdated);
+}
+
+onBeforeUnmount(() => {
+  if (typeof window !== 'undefined' && window.removeEventListener) {
+    window.removeEventListener('survey-updated', onSurveyUpdated);
+  }
+});
 </script>

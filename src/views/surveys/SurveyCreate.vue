@@ -232,16 +232,10 @@ import { reactive, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
 import { useAuthStore } from "@/store/authStore";
-import { fetchQuestionTypes, mapTypeKeyToUi } from "@/services/questionTypes";
 
 const router = useRouter();
-const {
-  createSurvey,
-  validateGeneral,
-  validateQuestions,
-  newQuestion,
-  newOption,
-} = useSurveys();
+const surveys = useSurveys();
+const { createSurvey, validateGeneral, validateQuestions } = surveys;
 const auth = useAuthStore();
 
 const form = reactive({
@@ -261,27 +255,10 @@ const showTitleError = computed(
 const canNextGeneral = computed(() => validateGeneral(form).ok);
 const canNextQuestions = computed(() => validateQuestions(form.questions).ok);
 
-// Tipos de pregunta desde backend
-const questionTypeOptions = ref([]);
-onMounted(async () => {
-  try {
-    const types = await fetchQuestionTypes();
-    const mapped = Array.isArray(types)
-      ? types.map((t) => ({ key: mapTypeKeyToUi(t.type_key), label: t.label }))
-      : [];
-    const seen = new Set();
-    questionTypeOptions.value = mapped.filter((t) => {
-      if (seen.has(t.key)) return false;
-      seen.add(t.key);
-      return true;
-    });
-  } catch (e) {
-    questionTypeOptions.value = [
-      { key: "open", label: "Abierta" },
-      { key: "single", label: "Opción única" },
-      { key: "multiple", label: "Opción múltiple" },
-    ];
-  }
+// Tipos de pregunta desde el store
+const questionTypeOptions = computed(() => surveys.questionTypeOptions.value);
+onMounted(() => {
+  surveys.loadQuestionTypes();
 });
 
 function next() {
@@ -292,23 +269,19 @@ function prev() {
 }
 
 function addQuestion() {
-  form.questions.push(newQuestion());
+  surveys.addQuestion(form);
 }
 function removeQuestion(index) {
-  form.questions.splice(index, 1);
+  surveys.removeQuestion(form, index);
 }
 function move(index, delta) {
-  const to = index + delta;
-  if (to < 0 || to >= form.questions.length) return;
-  const [q] = form.questions.splice(index, 1);
-  form.questions.splice(to, 0, q);
+  surveys.moveQuestion(form, index, delta);
 }
 function addOption(q) {
-  if (!q.options) q.options = [];
-  q.options.push(newOption());
+  surveys.addOption(q);
 }
 function removeOption(q, k) {
-  q.options.splice(k, 1);
+  surveys.removeOption(q, k);
 }
 
 function save() {

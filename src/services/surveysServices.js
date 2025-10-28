@@ -37,3 +37,23 @@ export async function createOption(questionId, payload) {
     .post(`/encuestas/preguntas/${questionId}/opciones`, payload)
     .then((r) => r.data);
 }
+
+export async function updateQuestion(questionId, payload) {
+  return api
+    .put(`/encuestas/preguntas/${questionId}`, payload)
+    .then((r) => r.data);
+}
+
+export async function deleteQuestion(questionId) {
+  return api.delete(`/encuestas/preguntas/${questionId}`).then((r) => r.data);
+}
+
+export async function updateOption(optionId, payload) {
+  return api
+    .put(`/encuestas/opciones/${optionId}`, payload)
+    .then((r) => r.data);
+}
+
+export async function deleteOption(optionId) {
+  return api.delete(`/encuestas/opciones/${optionId}`).then((r) => r.data);
+}

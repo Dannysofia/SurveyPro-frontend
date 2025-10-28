@@ -52,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, onBeforeUnmount } from 'vue';
 import { useRouter } from 'vue-router';
 import { fetchHomeSummary } from '@/store/surveysView.js';
 import SurveySummaryStat from '@/components/SurveySummaryStat.vue';
@@ -62,7 +62,7 @@ import '@/assets/css/surveys.css';
 
 const router = useRouter();
 
-const { list, setActive, removeSurvey, listResponses } = useSurveys();
+const { list, setActive, removeSurvey, listResponses, getByIdAsync } = useSurveys();
 
 const summary = ref({ total_surveys: 0, total_responses: 0 });
 const error = ref('');
@@ -120,4 +120,18 @@ async function onDelete(s) {
     if (!confirm('¿Deseas eliminar esta encuesta?')) return;
     await removeSurvey(s.id);
 }
+
+// Escuchar evento global de encuesta actualizada
+function onSurveyUpdated(e) {
+    const id = e?.detail?.id;
+    if (id) getByIdAsync(id, { force: true }).catch(() => {});
+}
+if (typeof window !== 'undefined' && window.addEventListener) {
+    window.addEventListener('survey-updated', onSurveyUpdated);
+}
+onBeforeUnmount(() => {
+    if (typeof window !== 'undefined' && window.removeEventListener) {
+        window.removeEventListener('survey-updated', onSurveyUpdated);
+    }
+});
 </script>
