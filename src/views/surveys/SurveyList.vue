@@ -1,7 +1,13 @@
 <template>
   <section>
+    <div class="breadcrumbs">
+      <span class="breadcrumb-item" @click="$router.push('/inicio')">Inicio</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Encuestas</span>
+    </div>
+
     <header class="list-header">
-      <h1 class="title">Tus encuestas</h1>
+      <h1 class="title">Mis encuestas</h1>
       <button class="btn btn-primary" @click="goCreate">Crear encuesta</button>
       <link
         rel="stylesheet"
@@ -70,6 +76,8 @@ import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
 import { useResponses } from "@/store/responsesStore";
 import SurveyCard from "@/components/SurveyCard.vue";
+import "@/assets/css/surveys.css";
+import "@/assets/css/breadcrumbs.css";
 
 const router = useRouter();
 const { list, removeSurvey, setActive, getByIdAsync } = useSurveys();

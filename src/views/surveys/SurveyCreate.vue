@@ -1,5 +1,13 @@
 ﻿<template>
   <section>
+    <div class="breadcrumbs">
+      <span class="breadcrumb-item" @click="$router.push('/inicio')">Inicio</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item" @click="$router.push('/encuestas')">Encuestas</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Nueva encuesta</span>
+    </div>
+
     <header class="editor-header">
       <div class="row">
         <h1 class="title">Nueva encuesta</h1>
@@ -59,7 +67,7 @@
       <header class="between" style="margin-bottom: 8px">
         <h3 class="title">Preguntas</h3>
         <button class="btn btn-ghost" @click="addQuestion">
-          Agregar pregunta
+          + Agregar pregunta
         </button>
       </header>
 
@@ -123,9 +131,9 @@
             <div class="between">
               <strong>Opciones</strong>
               <button class="btn btn-ghost" @click="addOption(q)">
-                Agregar opción
+                + Agregar opción
               </button>
-            </div>
+            </div><br>
             <div v-if="!q.options || q.options.length === 0" class="empty-tip">
               Agrega 2 o más opciones
             </div>
@@ -227,11 +235,12 @@
 </template>
 
 <script setup>
-// styles are loaded globally in main.js
 import { reactive, ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
 import { useAuthStore } from "@/store/authStore";
+import "@/assets/css/surveys.css";
+import "@/assets/css/breadcrumbs.css";
 
 const router = useRouter();
 const surveys = useSurveys();

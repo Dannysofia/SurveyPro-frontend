@@ -1,5 +1,13 @@
 <template>
   <section>
+    <div class="breadcrumbs">
+      <span class="breadcrumb-item" @click="$router.push('/inicio')">Inicio</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item" @click="$router.push('/encuestas')">Encuestas</span>
+      <span class="breadcrumb-separator">/</span>
+      <span class="breadcrumb-item">Editar encuesta</span>
+    </div>
+
     <header class="editor-header">
       <div class="row">
         <h1 class="title">Editar encuesta</h1>
@@ -80,7 +88,7 @@
             @click="addQuestion"
             :disabled="hasResponses"
           >
-            Agregar pregunta
+            + Agregar pregunta
           </button>
         </header>
 
@@ -162,9 +170,9 @@
                   @click="addOption(q)"
                   :disabled="hasResponses"
                 >
-                  Agregar opción
+                  + Agregar opción
                 </button>
-              </div>
+              </div><br>
               <div
                 v-if="!q.options || q.options.length === 0"
                 class="empty-tip"
@@ -278,10 +286,12 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from "vue";
+import { ref, reactive, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
 import { useResponses } from "@/store/responsesStore";
+import "@/assets/css/surveys.css";
+import "@/assets/css/breadcrumbs.css";
 
 const route = useRoute();
 const router = useRouter();
