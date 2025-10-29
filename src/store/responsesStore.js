@@ -74,13 +74,18 @@ export function useResponses() {
       const list = responsesBySurvey.value[surveyId] || [];
       const idx = list.findIndex((r) => String(r.id) === String(responseId));
       if (idx !== -1) {
-        const updated = { ...list[idx], answers };
+        const updated = { ...list[idx] };
+        if (hasAnswers(answers)) updated.answers = answers; // preserve if backend returns empty
         list.splice(idx, 1, updated);
         responsesBySurvey.value[surveyId] = [...list];
       } else {
         const base = mapResponseListItem(detail, surveyId);
-        base.answers = answers;
+        if (hasAnswers(answers)) base.answers = answers;
         responsesBySurvey.value[surveyId] = [base, ...list];
+      }
+      if (!hasAnswers(answers)) {
+        // Intentar poblar desde la vista agrupada
+        try { await loadList(surveyId); } catch { /* ignore */ }
       }
     } catch (e) {
       // Si no existe endpoint de detalle, recargar la lista para poblar respuestas desde la vista agrupada
@@ -124,14 +129,23 @@ export function useResponses() {
 
     const created = await submitSurveyResponse(surveyId, { answers: answersPayload });
     const rec = mapResponseListItem(created, surveyId);
-    const answers = normalizeAnswers(created?.answers || created?.answers_by_question_id, survey) || answersByQuestionId;
-    if (answers) rec.answers = answers;
+    let answers = normalizeAnswers(created?.answers || created?.answers_by_question_id, survey);
+    if (!hasAnswers(answers)) answers = answersByQuestionId; // fallback a lo que enviamos
+    if (hasAnswers(answers)) rec.answers = answers;
 
     const list = responsesBySurvey.value[surveyId] || [];
     const merged = uniqueSorted([rec, ...list]);
     responsesBySurvey.value[surveyId] = merged;
     try { await loadList(surveyId); } catch (err) { /* ignore refresh error */ }
     return rec;
+  }
+
+  function hasAnswers(a) {
+    if (!a) return false;
+    if (Array.isArray(a)) return a.length > 0;
+    if (typeof a === 'object') return Object.keys(a).length > 0;
+    if (typeof a === 'string') return a.trim().length > 0;
+    return true;
   }
 
   function ensureListLoaded(surveyId) {
@@ -165,9 +179,30 @@ export function useResponses() {
 
   function normalizeAnswers(raw, survey) {
     if (!raw) return null;
-    if (raw && !Array.isArray(raw) && typeof raw === 'object') return raw;
-    const out = {};
     const questions = Array.isArray(survey?.questions) ? survey.questions : [];
+
+    // Caso 1: objeto { [qid]: valor } -> normalizar por tipo
+    if (raw && !Array.isArray(raw) && typeof raw === 'object') {
+      const outFromObj = {};
+      for (const q of questions) {
+        const v = raw[q.id] ?? raw[String(q.id)];
+        if (v == null) continue;
+        if (q.type === 'open') {
+          outFromObj[q.id] = String(v);
+        } else if (q.type === 'single') {
+          const id = coerceToOptionId(v, q);
+          if (id != null) outFromObj[q.id] = id;
+        } else if (q.type === 'multiple') {
+          const arr = Array.isArray(v) ? v : [v];
+          const ids = arr
+            .map((x) => coerceToOptionId(x, q))
+            .filter((x) => x != null);
+          if (ids.length) outFromObj[q.id] = Array.from(new Set(ids));
+        }
+      }
+      return Object.keys(outFromObj).length ? outFromObj : null;
+    }
+    const out = {};
     const byId = new Map(questions.map((q) => [String(q.id), q]));
     const arr = Array.isArray(raw) ? raw : [];
     for (const item of arr) {
@@ -178,11 +213,45 @@ export function useResponses() {
       if (q.type === 'open') {
         out[q.id] = item?.value_text ?? item?.answer_text ?? item?.value ?? item?.text ?? '';
       } else if (q.type === 'single') {
-        const val = item?.option_id ?? item?.selected_option_id ?? item?.value ?? item?.answer_value;
+        let val = item?.option_id ?? item?.selected_option_id ?? item?.value ?? item?.answer_value;
+        // Soporte a payloads agregados que traen option_ids: [id]
+        if (val == null && Array.isArray(item?.option_ids) && item.option_ids.length === 1) {
+          val = item.option_ids[0];
+        }
+        if (val == null && Array.isArray(item?.selected_option_ids) && item.selected_option_ids.length === 1) {
+          val = item.selected_option_ids[0];
+        }
+        if (val == null) {
+          // a veces viene el texto de la opción en value_text/answer_text
+          const label = item?.value_text ?? item?.answer_text ?? null;
+          if (label) {
+            const opt = (q.options || []).find(
+              (o) => String(o.text).trim().toLowerCase() === String(label).trim().toLowerCase()
+            );
+            if (opt) val = opt.id;
+          }
+        }
         if (val != null) out[q.id] = val;
       } else if (q.type === 'multiple') {
-        const vals = item?.option_ids ?? item?.values ?? item?.answer_values;
+        let vals =
+          item?.option_ids ??
+          item?.selected_option_ids ??
+          item?.selectedOptions ??
+          item?.values ??
+          item?.answer_values;
         if (Array.isArray(vals)) {
+          const strVals = vals.map((v) => String(v));
+          const optIdSet = new Set((q.options || []).map((o) => String(o.id)));
+          const allAreKnownIds = strVals.length > 0 && strVals.every((s) => optIdSet.has(s));
+          if (!allAreKnownIds && typeof strVals[0] === 'string') {
+            // parece que son etiquetas -> mapear por texto
+            const textSet = new Set(strVals.map((v) => v.trim().toLowerCase()));
+            vals = (q.options || [])
+              .filter((o) => textSet.has(String(o.text).trim().toLowerCase()))
+              .map((o) => o.id);
+          } else {
+            vals = strVals; // ya son IDs (uuid/strings)
+          }
           out[q.id] = Array.isArray(out[q.id]) ? out[q.id] : [];
           out[q.id] = Array.from(new Set([...(out[q.id] || []), ...vals]));
         } else if (item?.selected_option_id != null) {
@@ -192,6 +261,18 @@ export function useResponses() {
       }
     }
     return out;
+  }
+
+  function coerceToOptionId(val, q) {
+    if (val == null) return null;
+    // ya es id
+    if (/^\d+$/.test(String(val))) return Number(val);
+    // intentar por texto
+    const label = String(val).trim().toLowerCase();
+    const match = (q.options || []).find(
+      (o) => String(o.text).trim().toLowerCase() === label
+    );
+    return match ? match.id : null;
   }
 
   function uniqueSorted(arr) {
