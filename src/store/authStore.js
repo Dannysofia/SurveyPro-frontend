@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { api, setAuthToken } from '@/api';
+import { useSurveys } from './surveysStore';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -28,11 +29,10 @@ export const useAuthStore = defineStore('auth', {
             try {
                 this.loading = true;
                 this.error = null;
-                // Enviar ambos nombres de campo para compatibilidad con backend
-                // que use 'email' o 'correo'.
                 const { data } = await api.post('/auth/login', { correo, email: correo, password });
                 this.user = data.user;
                 this.token = data.token;
+                localStorage.setItem('token', data.token);
                 setAuthToken(data.token);
                 return data.user;
             } catch (e) {
@@ -47,6 +47,9 @@ export const useAuthStore = defineStore('auth', {
             this.user = null;
             this.token = null;
             setAuthToken(null);
+            localStorage.removeItem('token');
+            const surveysStore = useSurveys();
+            surveysStore.reset();
         },
     },
 });

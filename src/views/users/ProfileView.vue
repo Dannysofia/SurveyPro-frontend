@@ -140,7 +140,8 @@ function goEdit() {
 }
 
 function onLogout() { 
-    auth.logout(); router.push({ name: 'login' }); 
+    auth.logout(); 
+    router.push({ name: 'login' }); 
 }
 
 function formatDate(iso) {

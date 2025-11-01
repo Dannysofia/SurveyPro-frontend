@@ -352,9 +352,9 @@ export function useSurveys() {
       const types = await fetchQuestionTypes();
       const mapped = Array.isArray(types)
         ? types.map((t) => ({
-            key: mapTypeKeyToUi(t.type_key),
-            label: t.label,
-          }))
+          key: mapTypeKeyToUi(t.type_key),
+          label: t.label,
+        }))
         : [];
       const seen = new Set();
       questionTypeOptions.value = mapped.filter((t) => {
@@ -521,7 +521,12 @@ export function useSurveys() {
     loadQuestionTypes,
     saveSurveyEdit,
     questionTypeOptions,
+    reset,
   };
+}
+function reset() {
+  surveys.value = [];
+  surveysLoaded = false;
 }
 function createOptionId() {
   return "o_" + Math.random().toString(36).slice(2, 9);
