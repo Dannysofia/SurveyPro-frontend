@@ -14,6 +14,10 @@
                         <i class="fas fa-edit"></i>
                     </button>
 
+                    <button class="icon-btn" @click="$emit('open-stats', survey)" aria-label="Estadísticas" title="Estadísticas">
+                        <i class="fas fa-chart-pie"></i>
+                    </button>
+
                     <button class="icon-btn" @click="$emit('answer', survey)" :disabled="isClosed"
                         aria-label="Responder" title="Responder">
                         <i class="fas fa-reply"></i>
@@ -59,7 +63,7 @@ const props = defineProps({
     survey: { type: Object, required: true },
 });
 
-defineEmits(['edit', 'answer', 'toggle', 'delete', 'open-responses']);
+defineEmits(['edit', 'answer', 'toggle', 'delete', 'open-responses', 'open-stats']);
 
 function formatDate(iso) {
     try { return new Date(iso).toLocaleString(); } catch { return '' }

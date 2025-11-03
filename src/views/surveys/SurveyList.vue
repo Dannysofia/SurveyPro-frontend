@@ -52,6 +52,7 @@
         :key="s.id"
         :survey="s"
         @edit="edit"
+        @open-stats="openStats"
         @answer="goAnswer"
         @toggle="toggleStatus"
         @delete="confirmDelete"
@@ -112,6 +113,9 @@ function goCreate() {
 
 function openResponses(s) {
   router.push({ name: "survey-responses", params: { id: s.id } });
+}
+function openStats(s) {
+  router.push({ name: 'survey-report', params: { id: s.id } });
 }
 function goAnswer(s) {
   router.push({ name: "survey-answer", params: { id: s.id } });

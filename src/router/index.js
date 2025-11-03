@@ -10,6 +10,7 @@ import SurveyResponsesList from "@/views/responses/SurveyResponsesList.vue";
 import SurveyResponseDetail from "@/views/responses/SurveyResponseDetail.vue";
 import SurveyAnswer from "@/views/responses/SurveyAnswer.vue";
 import ResponsesDashboard from "@/views/responses/ResponsesDashboard.vue";
+import SurveyReport from "@/views/reports/SurveyReport.vue";
 import HomeSurveyPro from "@/views/HomeSurveyPro.vue";
 import ProfileView from "@/views/users/ProfileView.vue";
 import ProfileEditView from "@/views/users/ProfileEditView.vue";
@@ -75,6 +76,11 @@ const routes = [
         path: "/encuestas/:id/respuestas",
         name: "survey-responses",
         component: SurveyResponsesList,
+      },
+      {
+        path: "/encuestas/:id/estadisticas",
+        name: "survey-report",
+        component: SurveyReport,
       },
       {
         path: "/encuestas/:id/respuestas/:responseId",
