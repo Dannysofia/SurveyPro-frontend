@@ -10,6 +10,7 @@ import SurveyResponsesList from "@/views/responses/SurveyResponsesList.vue";
 import SurveyResponseDetail from "@/views/responses/SurveyResponseDetail.vue";
 import SurveyAnswer from "@/views/responses/SurveyAnswer.vue";
 import ResponsesDashboard from "@/views/responses/ResponsesDashboard.vue";
+import SurveyThanks from "@/views/responses/SurveyThanks.vue";
 import SurveyReport from "@/views/reports/SurveyReport.vue";
 import HomeSurveyPro from "@/views/HomeSurveyPro.vue";
 import ProfileView from "@/views/users/ProfileView.vue";
@@ -91,6 +92,11 @@ const routes = [
         path: "/encuestas/:id/responder",
         name: "survey-answer",
         component: SurveyAnswer,
+      },
+      {
+        path: "/encuestas/:id/gracias",
+        name: "survey-thanks",
+        component: SurveyThanks,
       },
     ],
   },

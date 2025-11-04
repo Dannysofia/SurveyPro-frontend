@@ -2,12 +2,12 @@
   <section>
     <header class="list-header">
       <h1>Responder encuesta</h1>
-      <button class="btn btn-ghost" @click="goBack">Volver</button>
+      <button v-if="isLoggedIn" class="btn btn-ghost" @click="goBack">Volver</button>
     </header>
 
     <div v-if="!survey" class="empty">
       <p>No se encontró la encuesta.</p>
-      <button class="btn btn-ghost" @click="goBack">Regresar</button>
+      <button v-if="isLoggedIn" class="btn btn-ghost" @click="goBack">Regresar</button>
     </div>
 
     <div v-else class="card">
@@ -57,15 +57,18 @@ import { computed, reactive, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSurveys } from '@/store/surveysStore';
 import { useResponses } from '@/store/responsesStore';
+import { useAuthStore } from '@/store/authStore';
 
 const route = useRoute();
 const router = useRouter();
 const { getById, getByIdAsync } = useSurveys();
 const { submitResponse } = useResponses();
+const auth = useAuthStore();
 
 const surveyId = computed(() => String(route.params.id || ''));
 const survey = computed(() => getById(surveyId.value));
 const model = reactive({});
+const isLoggedIn = computed(() => Boolean(auth?.token));
 
 onMounted(async () => {
   if (surveyId.value) await getByIdAsync(surveyId.value);
@@ -88,8 +91,12 @@ function isChecked(qid, oid) {
 async function onSubmit() {
   try {
     await submitResponse(surveyId.value, model);
-    alert('Respuestas guardadas');
-    router.push({ name: 'survey-responses', params: { id: surveyId.value } });
+    if (isLoggedIn.value) {
+      alert('Respuestas guardadas');
+      router.push({ name: 'survey-responses', params: { id: surveyId.value } });
+    } else {
+      router.push({ name: 'survey-thanks', params: { id: surveyId.value } });
+    }
   } catch (e) {
     alert(String(e.message || e));
   }

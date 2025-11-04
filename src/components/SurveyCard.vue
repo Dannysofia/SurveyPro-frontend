@@ -10,7 +10,7 @@
 
                 <div class="card-icons">
 
-                    <button class="icon-btn" @click="$emit('edit', survey)" aria-label="Editar" title="Editar">
+                    <button class="icon-btn" @click="$emit('edit', survey)" :disabled="isClosed" aria-label="Editar" title="Editar">
                         <i class="fas fa-edit"></i>
                     </button>
 
@@ -29,7 +29,7 @@
                         <i v-else class="fas fa-lock"></i>
                     </button>
 
-                    <button class="icon-btn" @click="shareSurvey" aria-label="Compartir enlace" title="Compartir">
+                    <button class="icon-btn" @click="shareSurvey" :disabled="isClosed" aria-label="Compartir enlace" title="Compartir">
                         <i class="fas fa-share-nodes"></i>
                     </button>
 
@@ -78,6 +78,27 @@ const accentColor = computed(() =>
 );
 
 async function shareSurvey() {
-    alert('TODO: Implementar generación del enlace')
+    try {
+        const id = props.survey?.id;
+        if (!id) return;
+        const origin = typeof window !== 'undefined' ? window.location.origin : '';
+        const url = origin + `/encuestas/${encodeURIComponent(id)}/responder`;
+
+        if (navigator?.share) {
+            try {
+                await navigator.share({ title: 'Responder encuesta', text: props.survey?.title || 'Encuesta', url });
+                return;
+            } catch { /* fallback to clipboard */ }
+        }
+
+        if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(url);
+            alert('Enlace copiado al portapapeles');
+        } else {
+            prompt('Copia este enlace para compartir:', url);
+        }
+    } catch (e) {
+        alert('No se pudo generar el enlace');
+    }
 }
 </script>

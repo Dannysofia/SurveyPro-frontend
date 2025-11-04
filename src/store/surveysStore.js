@@ -138,7 +138,7 @@ export function useSurveys() {
 
   // carga detalle de encuesta; opcionalmente forzar recarga desde backend
   async function getByIdAsync(id, { force = false } = {}) {
-    await ensureLoaded();
+    //await ensureLoaded();
     const found = surveys.value.find((s) => s.id === id);
     // Si ya tenemos preguntas y no pedimos forzar, devolvemos el caché
     if (

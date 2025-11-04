@@ -160,7 +160,7 @@ async function edit(s) {
     alert("Esta encuesta ya tiene respuestas y no puede editarse.");
     return;
   }
-  router.push({ name: "survey-edit", params: { id: s.id } });
+    router.push({ name: "survey-edit", params: { id: s.id } });
 }
 
 function toggleStatus(s) {
