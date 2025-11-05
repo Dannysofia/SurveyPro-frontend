@@ -1,5 +1,10 @@
 <template>
   <section>
+    <nav class="breadcrumb">
+      <router-link :to="{ name: 'survey-home' }">Inicio</router-link>
+      <span class="breadcrumb-sep">/</span>
+      <router-link to="/encuestas">Encuestas</router-link>
+    </nav>
     <header class="list-header">
       <h1>Respuestas: {{ survey?.title || 'Encuesta' }}</h1>
       <div class="row-wrap">
