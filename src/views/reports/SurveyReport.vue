@@ -10,10 +10,19 @@
 
     <div class="list-header">
       <h1 class="title">Estadísticas: {{ survey?.title || '' }}</h1>
-      <button class="btn btn-ghost" @click="goBack">Volver</button>
+      <div class="row-wrap">
+        <div class="export">
+          <button class="btn btn-primary" @click="toggleExport">Exportar</button>
+          <div v-if="showExport" class="export-menu">
+            <button class="menu-item" @click="onExportPdf">PDF</button>
+          </div>
+        </div>
+        <button class="btn btn-ghost" @click="goBack">Volver</button>
+      </div>
     </div>
 
     <!-- Resumen -->
+    <div ref="reportEl">
     <div class="card" style="margin-bottom:12px;">
       <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;">
         <SurveySummaryStat title="Total de respuestas" :value="summary.totalResponses" />
@@ -81,6 +90,7 @@
 
       </div>
     </div>
+    </div>
   </section>
 </template>
 
@@ -93,6 +103,7 @@ import SurveySummaryStat from '@/components/SurveySummaryStat.vue';
 import PieChart from '@/components/charts/PieChart.vue';
 import BarChart from '@/components/charts/BarChart.vue';
 import { computeGlobalSummary, buildQuestionStats } from '@/services/reportUtils';
+import { exportElementToPdf } from '@/utils/exportPdf';
 import '@/assets/css/surveys.css';
 import '@/assets/css/breadcrumbs.css';
 
@@ -105,6 +116,8 @@ const surveyId = computed(() => route.params.id);
 const survey = ref(null);
 const summary = ref({ totalResponses: 0, expected: null, responseRate: null });
 const stats = ref({});
+const reportEl = ref(null);
+const showExport = ref(false);
 
 onMounted(async () => {
   await ensureLoaded();
@@ -123,6 +136,17 @@ async function ensureLoaded() {
 
 function goBack() { router.push({ name: 'surveys' }); }
 function formatDate(iso) { try { return new Date(iso).toLocaleString(); } catch { return '' } }
+function toggleExport(){ showExport.value = !showExport.value; }
+function sanitize(str){ return String(str || 'reporte').replace(/[^\w\-\u00C0-\u024F ]+/g,'').replace(/\s+/g,'_'); }
+async function onExportPdf(){
+  try {
+    showExport.value = false;
+    const name = `estadisticas_${sanitize(survey.value?.title)}.pdf`;
+    await exportElementToPdf(reportEl.value, { filename: name });
+  } catch (e) {
+    alert(String(e.message || e));
+  }
+}
 </script>
 
 <style scoped>
@@ -136,4 +160,27 @@ function formatDate(iso) { try { return new Date(iso).toLocaleString(); } catch 
   padding: 8px 6px;
 }
 .table th { background: #f8fafc; }
+
+.export { position: relative; }
+.export-menu {
+  position: absolute;
+  right: 0;
+  top: 40px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  min-width: 140px;
+  box-shadow: 0 12px 24px rgba(2,6,23,0.12);
+  z-index: 20;
+}
+.menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+}
+.menu-item:hover { background: #f8fafc; }
 </style>
