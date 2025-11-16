@@ -1,10 +1,12 @@
 <template>
   <section>
-    <div class="breadcrumbs">
-      <span class="breadcrumb-item" @click="$router.push('/inicio')">Inicio</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item">Encuestas</span>
-    </div>
+    <BreadCrumbsNav
+      :items="[
+        { label: 'Inicio', key: 'inicio', clickable: true },
+        { label: 'Encuestas', key: 'encuestas', clickable: true },      
+      ]"
+      @navigate="goTo"
+    />
 
     <header class="list-header">
       <h1 class="title">Mis encuestas</h1>
@@ -78,7 +80,7 @@ import { useSurveys } from "@/store/surveysStore";
 import { useResponses } from "@/store/responsesStore";
 import SurveyCard from "@/components/SurveyCard.vue";
 import "@/assets/css/surveys.css";
-import "@/assets/css/breadcrumbs.css";
+import BreadCrumbsNav from "@/components/BreadCrumbsNav.vue";
 
 const router = useRouter();
 const { list, removeSurvey, setActive, getByIdAsync } = useSurveys();
@@ -160,4 +162,8 @@ onBeforeUnmount(() => {
     window.removeEventListener("survey-updated", onSurveyUpdated);
   }
 });
+
+function goTo(key){
+  router.push(`/${key}`)
+}
 </script>

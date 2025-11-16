@@ -1,12 +1,13 @@
 <template>
   <section>
-    <div class="breadcrumbs">
-      <span class="breadcrumb-item" @click="$router.push('/inicio')">Inicio</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item" @click="$router.push('/encuestas')">Encuestas</span>
-      <span class="breadcrumb-separator">/</span>
-      <span class="breadcrumb-item">Editar encuesta</span>
-    </div>
+    <BreadCrumbsNav
+    :items="[
+      {label:'Inicio', key:'inicio', clickable:true},
+      {label:'Encuestas', key:'encuestas', clickable:true},
+      {label:'Editar encuesta', clickable:false}
+    ]"
+    @navigate="goTo"
+    />
 
     <header class="editor-header">
       <div class="row">
@@ -291,7 +292,8 @@ import { useRoute, useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
 import { useResponses } from "@/store/responsesStore";
 import "@/assets/css/surveys.css";
-import "@/assets/css/breadcrumbs.css";
+import BreadCrumbsNav from "@/components/BreadCrumbsNav.vue";
+//import "@/assets/css/breadcrumbs.css";
 
 const route = useRoute();
 const router = useRouter();
@@ -402,5 +404,9 @@ async function save() {
 
 function cancel() {
   router.back();
+}
+
+function goTo(key){
+  router.push(`/${key}`)
 }
 </script>
