@@ -256,9 +256,14 @@ export function useSurveys() {
 
   // Actualiza datos generales de la encuesta (título, descripción, color, status opcional)
   async function updateGeneral(id, payload) {
+    const normalizedDesc =
+      typeof payload.description === "string"
+        ? payload.description.trim()
+        : payload.description;
     const body = {
       title: payload.title ?? undefined,
-      description: payload.description ?? undefined,
+      description:
+        normalizedDesc === "" ? "" : (normalizedDesc ?? undefined),
       color: payload.color ?? undefined,
       status: payload.status ?? undefined,
     };
@@ -268,7 +273,10 @@ export function useSurveys() {
       surveys.value[idx] = {
         ...surveys.value[idx],
         title: updated.title ?? surveys.value[idx].title,
-        description: updated.description ?? surveys.value[idx].description,
+        description:
+          (updated.description === null || updated.description === "")
+            ? ""
+            : (updated.description ?? (body.description === "" ? "" : surveys.value[idx].description)),
         color: updated.color ?? surveys.value[idx].color,
         active:
           typeof updated.status === "string"
@@ -484,6 +492,19 @@ export function useSurveys() {
 
     // 4) refrescar detalle en el store
     await getByIdAsync(surveyId, { force: true });
+
+    // 4.1) Si el usuario borró la descripción pero el backend no la actualiza,
+    // forzamos que quede vacía en la caché para reflejar la intención del usuario.
+    try {
+      const trimmedDesc =
+        typeof form.description === "string" ? form.description.trim() : form.description;
+      if (trimmedDesc === "") {
+        const idx = surveys.value.findIndex((s) => s.id === surveyId);
+        if (idx !== -1) surveys.value[idx].description = "";
+      }
+    } catch (_) {
+      // no-op
+    }
 
     // 5) notificar otras vistas
     if (typeof window !== "undefined" && window.dispatchEvent) {
