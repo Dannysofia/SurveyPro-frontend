@@ -1,12 +1,12 @@
 <template>
   <section>
     <BreadCrumbsNav
-    :items="[
-      {label:'Inicio', key:'inicio', clickable:true},
-      {label:'Encuestas', key:'encuestas', clickable:true},
-      {label:'Editar encuesta', clickable:false}
-    ]"
-    @navigate="goTo"
+      :items="[
+        { label: 'Inicio', key: 'inicio', clickable: true },
+        { label: 'Encuestas', key: 'encuestas', clickable: true },
+        { label: 'Editar encuesta', clickable: false },
+      ]"
+      @navigate="goTo"
     />
 
     <header class="editor-header">
@@ -26,10 +26,6 @@
     </div>
 
     <div v-else>
-      <div v-if="hasResponses" class="alert" style="margin-bottom: 12px">
-        Esta encuesta ya tiene respuestas y no puede editarse.
-      </div>
-
       <div v-if="step === 0" class="card">
         <div class="form-grid">
           <div class="form-col">
@@ -86,7 +82,7 @@
           <h3 class="title">Preguntas</h3>
           <button
             class="btn btn-ghost"
-            @click="addQuestion"
+            @click="addQuestion(form)"
             :disabled="hasResponses"
           >
             + Agregar pregunta
@@ -108,21 +104,21 @@
               <div class="question-toolbar">
                 <button
                   class="btn btn-ghost btn-sm"
-                  @click="move(idx, -1)"
+                  @click="moveQuestion(form, idx, -1)"
                   :disabled="idx === 0 || hasResponses"
                 >
                   Subir
                 </button>
                 <button
                   class="btn btn-ghost btn-sm"
-                  @click="move(idx, 1)"
+                  @click="moveQuestion(form, idx, 1)"
                   :disabled="idx === form.questions.length - 1 || hasResponses"
                 >
                   Bajar
                 </button>
                 <button
                   class="btn btn-danger btn-sm"
-                  @click="removeQuestion(idx)"
+                  @click="removeQuestion(form, idx)"
                   :disabled="hasResponses"
                 >
                   Eliminar
@@ -173,7 +169,8 @@
                 >
                   + Agregar opción
                 </button>
-              </div><br>
+              </div>
+              <br />
               <div
                 v-if="!q.options || q.options.length === 0"
                 class="empty-tip"
@@ -198,7 +195,7 @@
                     @click="removeOption(q, k)"
                     :disabled="hasResponses"
                   >
-                    ×
+                    X
                   </button>
                 </div>
               </div>
@@ -293,12 +290,20 @@ import { useSurveys } from "@/store/surveysStore";
 import { useResponses } from "@/store/responsesStore";
 import "@/assets/css/surveys.css";
 import BreadCrumbsNav from "@/components/BreadCrumbsNav.vue";
-//import "@/assets/css/breadcrumbs.css";
 
 const route = useRoute();
 const router = useRouter();
 const surveys = useSurveys();
-const { getByIdAsync, validateGeneral, validateQuestions } = surveys;
+const {
+  getByIdAsync,
+  validateGeneral,
+  validateQuestions,
+  addQuestion,
+  removeQuestion,
+  moveQuestion,
+  addOption,
+  removeOption,
+} = surveys;
 const { listResponses } = useResponses();
 
 // estado local del formulario y meta
@@ -368,28 +373,8 @@ function prev() {
   if (step.value > 0) step.value--;
 }
 
-function addQuestion() {
-  surveys.addQuestion(form);
-}
-function removeQuestion(index) {
-  surveys.removeQuestion(form, index);
-}
-function move(index, delta) {
-  surveys.moveQuestion(form, index, delta);
-}
-function addOption(q) {
-  surveys.addOption(q);
-}
-function removeOption(q, k) {
-  surveys.removeOption(q, k);
-}
-
 // Guardar cambios
 async function save() {
-  if (hasResponses.value) {
-    alert("Esta encuesta tiene respuestas y no puede editarse.");
-    return;
-  }
   try {
     await surveys.saveSurveyEdit(surveyId.value, form, original.value);
     alert("Encuesta actualizada");
@@ -406,7 +391,7 @@ function cancel() {
   router.back();
 }
 
-function goTo(key){
-  router.push(`/${key}`)
+function goTo(key) {
+  router.push(`/${key}`);
 }
 </script>

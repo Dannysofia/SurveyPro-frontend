@@ -1,5 +1,4 @@
-// Store de encuestas (responsable solo de datos de encuesta)
-// - Provee creación, listado, detalle, edición general, activación/cierre y eliminación
+// Store para gestión de encuestas y preguntas
 import { ref } from "vue";
 import { fetchQuestionTypes, mapTypeKeyToUi } from "@/services/questionTypes";
 import {
@@ -66,6 +65,7 @@ export function useSurveys() {
     return surveys;
   }
 
+  // CREACIÓN DE ENCUESTA
   async function createSurvey(payload, { ownerId } = {}) {
     const title = payload.title?.trim() || "";
     if (!title) throw new Error("Titulo requerido");
@@ -128,194 +128,7 @@ export function useSurveys() {
     return surveyUi;
   }
 
-  async function removeSurvey(id) {
-    // Elimina la encuesta en el servidor y actualiza la cache local.
-    await deleteSurvey(id);
-    const idx = surveys.value.findIndex((s) => s.id === id);
-    if (idx !== -1) surveys.value.splice(idx, 1);
-    return true;
-  }
-
-  // carga detalle de encuesta; opcionalmente forzar recarga desde backend
-  async function getByIdAsync(id, { force = false } = {}) {
-    //await ensureLoaded();
-    const found = surveys.value.find((s) => s.id === id);
-    // Si ya tenemos preguntas y no pedimos forzar, devolvemos el caché
-    if (
-      !force &&
-      found &&
-      Array.isArray(found.questions) &&
-      found.questions.length > 0
-    )
-      return found;
-    const data = await getSurveyDetail(id);
-    const mapped = mapSurveyDtoToUi(data);
-    mapped.questions = Array.isArray(data.questions)
-      ? data.questions.map(mapQuestionDtoToUi)
-      : [];
-    const idx = surveys.value.findIndex((s) => s.id === id);
-    if (idx === -1) surveys.value.push(mapped);
-    else surveys.value[idx] = mapped;
-    return mapped;
-  }
-
-  function getById(id) {
-    return surveys.value.find((s) => s.id === id) || null;
-  }
-
-  async function setActive(id, active) {
-    const status = active ? "Activo" : "Cerrado";
-    const updated = await updateSurvey(id, { status });
-    const idx = surveys.value.findIndex((s) => s.id === id);
-    if (idx !== -1) {
-      surveys.value[idx] = {
-        ...surveys.value[idx],
-        active,
-        title: updated.title,
-        description: updated.description,
-      };
-    }
-    return true;
-  }
-
-  // Preguntas / Opciones - actualizaciones y eliminaciones (mantener caché)
-  async function updateQuestionAsync(questionId, payload) {
-    const updated = await updateQuestion(questionId, payload);
-    const qUi = mapQuestionDtoToUi({
-      ...updated,
-      options: updated.options || [],
-    });
-    // actualizar en la cache
-    for (const s of surveys.value) {
-      if (!Array.isArray(s.questions)) continue;
-      const idx = s.questions.findIndex(
-        (q) => String(q.id) === String(questionId)
-      );
-      if (idx !== -1) {
-        s.questions.splice(idx, 1, qUi);
-        break;
-      }
-    }
-    return qUi;
-  }
-
-  async function deleteQuestionAsync(questionId) {
-    await deleteQuestion(questionId);
-    for (const s of surveys.value) {
-      if (!Array.isArray(s.questions)) continue;
-      const idx = s.questions.findIndex(
-        (q) => String(q.id) === String(questionId)
-      );
-      if (idx !== -1) {
-        s.questions.splice(idx, 1);
-        break;
-      }
-    }
-    return true;
-  }
-
-  async function updateOptionAsync(optionId, payload) {
-    const updated = await updateOption(optionId, payload);
-    // updated should contain option_id and option_label
-    for (const s of surveys.value) {
-      if (!Array.isArray(s.questions)) continue;
-      for (const q of s.questions) {
-        if (!Array.isArray(q.options)) continue;
-        const idx = q.options.findIndex(
-          (o) => String(o.id) === String(optionId)
-        );
-        if (idx !== -1) {
-          q.options.splice(idx, 1, {
-            id: updated.option_id,
-            text: updated.option_label,
-          });
-          return { id: updated.option_id, text: updated.option_label };
-        }
-      }
-    }
-    return null;
-  }
-
-  async function deleteOptionAsync(optionId) {
-    await deleteOption(optionId);
-    for (const s of surveys.value) {
-      if (!Array.isArray(s.questions)) continue;
-      for (const q of s.questions) {
-        if (!Array.isArray(q.options)) continue;
-        const idx = q.options.findIndex(
-          (o) => String(o.id) === String(optionId)
-        );
-        if (idx !== -1) {
-          q.options.splice(idx, 1);
-          return true;
-        }
-      }
-    }
-    return true;
-  }
-
-  // Actualiza datos generales de la encuesta (título, descripción, color, status opcional)
-  async function updateGeneral(id, payload) {
-    const normalizedDesc =
-      typeof payload.description === "string"
-        ? payload.description.trim()
-        : payload.description;
-    const body = {
-      title: payload.title ?? undefined,
-      description:
-        normalizedDesc === "" ? "" : (normalizedDesc ?? undefined),
-      color: payload.color ?? undefined,
-      status: payload.status ?? undefined,
-    };
-    const updated = await updateSurvey(id, body);
-    const idx = surveys.value.findIndex((s) => s.id === id);
-    if (idx !== -1) {
-      surveys.value[idx] = {
-        ...surveys.value[idx],
-        title: updated.title ?? surveys.value[idx].title,
-        description:
-          (updated.description === null || updated.description === "")
-            ? ""
-            : (updated.description ?? (body.description === "" ? "" : surveys.value[idx].description)),
-        color: updated.color ?? surveys.value[idx].color,
-        active:
-          typeof updated.status === "string"
-            ? String(updated.status).toLowerCase() === "activo"
-            : surveys.value[idx].active,
-      };
-    }
-    return surveys.value[idx] || null;
-  }
-
-  // Validaciones UI
-  function validateGeneral({ title }) {
-    const hasTitle = Boolean(title && title.trim().length > 0);
-    return {
-      ok: hasTitle,
-      errors: { title: !hasTitle ? "Titulo requerido" : "" },
-    };
-  }
-
-  function validateQuestions(questions) {
-    if (!Array.isArray(questions) || questions.length === 0)
-      return { ok: false, reason: "Debe existir al menos una pregunta" };
-    for (const q of questions) {
-      if (!q.text || !q.text.trim())
-        return { ok: false, reason: "Texto de pregunta vacio" };
-      if (q.type === "single" || q.type === "multiple") {
-        if (!Array.isArray(q.options) || q.options.length < 2)
-          return {
-            ok: false,
-            reason: "Preguntas cerradas requieren minimo 2 opciones",
-          };
-        if (q.options.some((o) => !o.text || !o.text.trim()))
-          return { ok: false, reason: "Opciones no pueden estar vacias" };
-      }
-    }
-    return { ok: true };
-  }
-
-  // Builders UI
+  // NUEVAS PREGUNTAS Y OPCIONES VACIAS
   function newQuestion() {
     return {
       id: createQuestionId(),
@@ -329,15 +142,18 @@ export function useSurveys() {
     return { id: createOptionId(), text: "" };
   }
 
-  // Funciones de manejo de preguntas y opciones en el formulario
+  // MANIPULACIÓN DE PREGUNTAS Y OPCIONES EN EL FORMULARIO
+  // Agregar pregunta al formulario
   function addQuestion(form) {
     form.questions.push(newQuestion());
   }
 
+  // Eliminar pregunta del formulario
   function removeQuestion(form, index) {
     form.questions.splice(index, 1);
   }
 
+  // Eliminar pregunta en el formulario
   function moveQuestion(form, index, delta) {
     const to = index + delta;
     if (to < 0 || to >= form.questions.length) return;
@@ -345,24 +161,26 @@ export function useSurveys() {
     form.questions.splice(to, 0, q);
   }
 
+  // Agregar opción a una pregunta del formulario
   function addOption(question) {
     if (!question.options) question.options = [];
     question.options.push(newOption());
   }
 
+  // Eliminar opción de una pregunta del formulario
   function removeOption(question, optionIndex) {
     question.options.splice(optionIndex, 1);
   }
 
-  // Cargar tipos de preguntas (usado por create/edit)
+  // CARGA DE TIPOS DE PREGUNTA
   async function loadQuestionTypes() {
     try {
       const types = await fetchQuestionTypes();
       const mapped = Array.isArray(types)
         ? types.map((t) => ({
-          key: mapTypeKeyToUi(t.type_key),
-          label: t.label,
-        }))
+            key: mapTypeKeyToUi(t.type_key),
+            label: t.label,
+          }))
         : [];
       const seen = new Set();
       questionTypeOptions.value = mapped.filter((t) => {
@@ -378,6 +196,68 @@ export function useSurveys() {
       ];
     }
     return questionTypeOptions;
+  }
+
+  // DETALLE DE ENCUESTA
+  // carga detalle de encuesta; opcionalmente forzar recarga desde backend
+  async function getByIdAsync(id) {
+    //const found = surveys.value.find((s) => s.id === id);
+    // Si ya tenemos preguntas y no pedimos forzar, devolvemos el caché
+    /*if (
+      !force &&
+      found &&
+      Array.isArray(found.questions) &&
+      found.questions.length > 0
+    )
+      return found;*/
+    const data = await getSurveyDetail(id);
+    const mapped = mapSurveyDtoToUi(data);
+    mapped.questions = Array.isArray(data.questions)
+      ? data.questions.map(mapQuestionDtoToUi)
+      : [];
+    const idx = surveys.value.findIndex((s) => s.id === id);
+    if (idx === -1) surveys.value.push(mapped);
+    else surveys.value[idx] = mapped;
+    return mapped;
+  }
+
+  function getById(id) {
+    return surveys.value.find((s) => s.id === id) || null;
+  }
+
+  // EDICIÓN DE ENCUESTA
+
+  // Actualiza datos generales de la encuesta (título, descripción, color, status opcional)
+  async function updateGeneral(id, payload) {
+    const normalizedDesc =
+      typeof payload.description === "string"
+        ? payload.description.trim()
+        : payload.description;
+    const body = {
+      title: payload.title ?? undefined,
+      description: normalizedDesc === "" ? "" : normalizedDesc ?? undefined,
+      color: payload.color ?? undefined,
+      status: payload.status ?? undefined,
+    };
+    const updated = await updateSurvey(id, body);
+    const idx = surveys.value.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      surveys.value[idx] = {
+        ...surveys.value[idx],
+        title: updated.title ?? surveys.value[idx].title,
+        description:
+          updated.description === null || updated.description === ""
+            ? ""
+            : updated.description ??
+              (body.description === "" ? "" : surveys.value[idx].description),
+        color: updated.color ?? surveys.value[idx].color,
+        active:
+          typeof updated.status === "string"
+            ? String(updated.status).toLowerCase() === "activo"
+            : surveys.value[idx].active,
+      };
+    }
+    return surveys.value[idx] || null;
   }
 
   // Guardar cambios de edición
@@ -497,7 +377,9 @@ export function useSurveys() {
     // forzamos que quede vacía en la caché para reflejar la intención del usuario.
     try {
       const trimmedDesc =
-        typeof form.description === "string" ? form.description.trim() : form.description;
+        typeof form.description === "string"
+          ? form.description.trim()
+          : form.description;
       if (trimmedDesc === "") {
         const idx = surveys.value.findIndex((s) => s.id === surveyId);
         if (idx !== -1) surveys.value[idx].description = "";
@@ -516,6 +398,141 @@ export function useSurveys() {
         /* ignore in environments without DOM */
       }
     }
+  }
+
+  // EDITAR PREGUNTAS
+  async function updateQuestionAsync(questionId, payload) {
+    const updated = await updateQuestion(questionId, payload);
+    const qUi = mapQuestionDtoToUi({
+      ...updated,
+      options: updated.options || [],
+    });
+    // actualizar en la cache
+    for (const s of surveys.value) {
+      if (!Array.isArray(s.questions)) continue;
+      const idx = s.questions.findIndex(
+        (q) => String(q.id) === String(questionId)
+      );
+      if (idx !== -1) {
+        s.questions.splice(idx, 1, qUi);
+        break;
+      }
+    }
+    return qUi;
+  }
+  
+  // ELIMINAR PREGUNTAS
+  async function deleteQuestionAsync(questionId) {
+    await deleteQuestion(questionId);
+    for (const s of surveys.value) {
+      if (!Array.isArray(s.questions)) continue;
+      const idx = s.questions.findIndex(
+        (q) => String(q.id) === String(questionId)
+      );
+      if (idx !== -1) {
+        s.questions.splice(idx, 1);
+        break;
+      }
+    }
+    return true;
+  }
+
+  // EDITAR OPCIONES
+    async function updateOptionAsync(optionId, payload) {
+    const updated = await updateOption(optionId, payload);
+    // updated should contain option_id and option_label
+    for (const s of surveys.value) {
+      if (!Array.isArray(s.questions)) continue;
+      for (const q of s.questions) {
+        if (!Array.isArray(q.options)) continue;
+        const idx = q.options.findIndex(
+          (o) => String(o.id) === String(optionId)
+        );
+        if (idx !== -1) {
+          q.options.splice(idx, 1, {
+            id: updated.option_id,
+            text: updated.option_label,
+          });
+          return { id: updated.option_id, text: updated.option_label };
+        }
+      }
+    }
+    return null;
+  }
+
+  // ELIMINAR OPCIONES
+  async function deleteOptionAsync(optionId) {
+    await deleteOption(optionId);
+    for (const s of surveys.value) {
+      if (!Array.isArray(s.questions)) continue;
+      for (const q of s.questions) {
+        if (!Array.isArray(q.options)) continue;
+        const idx = q.options.findIndex(
+          (o) => String(o.id) === String(optionId)
+        );
+        if (idx !== -1) {
+          q.options.splice(idx, 1);
+          return true;
+        }
+      }
+    }
+    return true;
+  }
+
+  //  ELIMINAR ENCUESTA
+  async function removeSurvey(id) {
+    // Elimina la encuesta en el servidor y actualiza la cache local.
+    await deleteSurvey(id);
+    const idx = surveys.value.findIndex((s) => s.id === id);
+    if (idx !== -1) surveys.value.splice(idx, 1);
+    return true;
+  }
+
+  // ACTUALIZAR ESTADO DE LA ENCUESTA
+    async function setActive(id, active) {
+    const status = active ? "Activo" : "Cerrado";
+    const updated = await updateSurvey(id, { status });
+    const idx = surveys.value.findIndex((s) => s.id === id);
+    if (idx !== -1) {
+      surveys.value[idx] = {
+        ...surveys.value[idx],
+        active,
+        title: updated.title,
+        description: updated.description,
+      };
+    }
+    return true;
+  }
+
+  // VALIDACIONES FORMULARIO
+
+  // Validaciones de datos generales
+  function validateGeneral({ title }) {
+    const hasTitle = Boolean(title && title.trim().length > 0);
+    return {
+      ok: hasTitle,
+      errors: { title: !hasTitle ? "Titulo requerido" : "" },
+    };
+  }
+
+  // Validaciones de preguntas
+  function validateQuestions(questions) {
+    if (!Array.isArray(questions) || questions.length === 0)
+      return { ok: false, reason: "Debe existir al menos una pregunta" };
+    for (const q of questions) {
+      if (!q.text || !q.text.trim())
+        return { ok: false, reason: "Texto de pregunta vacio" };
+      if (q.type === "single" || q.type === "multiple") {
+        if (!Array.isArray(q.options) || q.options.length < 2)
+          return {
+            ok: false,
+            reason: "Preguntas cerradas requieren minimo 2 opciones",
+          };
+        if (q.options.some((o) => !o.text || !o.text.trim()))
+          return { ok: false, reason: "Opciones no pueden estar vacias" };
+      }
+    }
+    return { ok: true };
   }
 
   return {

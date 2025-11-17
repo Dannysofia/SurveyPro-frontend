@@ -20,6 +20,7 @@
       <span :class="['step', { active: step === 2 }]">Vista previa</span>
     </nav>
 
+    <!-- Step 0: General Info -->
     <div v-if="step === 0" class="card">
       <div class="form-grid">
         <div class="form-col">
@@ -63,10 +64,11 @@
       </footer>
     </div>
 
+    <!-- Step 1: Questions -->
     <div v-else-if="step === 1" class="card">
       <header class="between" style="margin-bottom: 8px">
         <h3 class="title">Preguntas</h3>
-        <button class="btn btn-ghost" @click="addQuestion">
+        <button class="btn btn-ghost" @click="addQuestion(form)">
           + Agregar pregunta
         </button>
       </header>
@@ -86,21 +88,21 @@
             <div class="question-toolbar">
               <button
                 class="btn btn-ghost btn-sm"
-                @click="move(idx, -1)"
+                @click="moveQuestion(form, idx, -1)"
                 :disabled="idx === 0"
               >
                 Subir
               </button>
               <button
                 class="btn btn-ghost btn-sm"
-                @click="move(idx, 1)"
+                @click="moveQuestion(form, idx, 1)"
                 :disabled="idx === form.questions.length - 1"
               >
                 Bajar
               </button>
               <button
                 class="btn btn-danger btn-sm"
-                @click="removeQuestion(idx)"
+                @click="removeQuestion(form, idx)"
               >
                 Eliminar
               </button>
@@ -154,7 +156,7 @@
                   class="btn btn-danger btn-sm"
                   @click="removeOption(q, k)"
                 >
-                  ×
+                  X
                 </button>
               </div>
             </div>
@@ -174,6 +176,7 @@
       </footer>
     </div>
 
+    <!-- Step 2: Preview -->
     <div v-else-if="step === 2" class="card">
       <header class="between"><h3 class="title">Vista previa</h3></header>
       <div class="preview">
@@ -245,7 +248,16 @@ import BreadCrumbsNav from "@/components/BreadCrumbsNav.vue";
 
 const router = useRouter();
 const surveys = useSurveys();
-const { createSurvey, validateGeneral, validateQuestions } = surveys;
+const {
+  createSurvey,
+  validateGeneral,
+  validateQuestions,
+  addQuestion,
+  moveQuestion,
+  removeQuestion,
+  addOption,
+  removeOption,
+} = surveys;
 const auth = useAuthStore();
 
 const form = reactive({
@@ -276,22 +288,6 @@ function next() {
 }
 function prev() {
   if (step.value > 0) step.value--;
-}
-
-function addQuestion() {
-  surveys.addQuestion(form);
-}
-function removeQuestion(index) {
-  surveys.removeQuestion(form, index);
-}
-function move(index, delta) {
-  surveys.moveQuestion(form, index, delta);
-}
-function addOption(q) {
-  surveys.addOption(q);
-}
-function removeOption(q, k) {
-  surveys.removeOption(q, k);
 }
 
 function save() {

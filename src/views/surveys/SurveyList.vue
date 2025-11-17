@@ -3,7 +3,7 @@
     <BreadCrumbsNav
       :items="[
         { label: 'Inicio', key: 'inicio', clickable: true },
-        { label: 'Encuestas', key: 'encuestas', clickable: true },      
+        { label: 'Encuestas', key: 'encuestas', clickable: true },
       ]"
       @navigate="goTo"
     />
@@ -73,7 +73,6 @@
 </template>
 
 <script setup>
-
 import { computed, ref, onBeforeUnmount } from "vue";
 import { useRouter } from "vue-router";
 import { useSurveys } from "@/store/surveysStore";
@@ -89,6 +88,8 @@ const items = computed(() => list().value);
 const q = ref("");
 const sortBy = ref("date");
 const status = ref("all");
+
+// Filtro y ordenamiento
 const filtered = computed(() => {
   let arr = items.value.slice();
   const query = q.value.trim().toLowerCase();
@@ -109,19 +110,23 @@ const filtered = computed(() => {
 const toDelete = ref(null);
 const dlg = ref(null);
 
+// Crear nueva encuesta
 function goCreate() {
   router.push("/encuestas/nueva");
 }
-
+// Ver respuestas de encuesta
 function openResponses(s) {
   router.push({ name: "survey-responses", params: { id: s.id } });
 }
+// Ver estadísticas de encuesta
 function openStats(s) {
-  router.push({ name: 'survey-report', params: { id: s.id } });
+  router.push({ name: "survey-report", params: { id: s.id } });
 }
+// Responder encuesta
 function goAnswer(s) {
   router.push({ name: "survey-answer", params: { id: s.id } });
 }
+// Editar encuesta
 function edit(s) {
   const hasResp = (listResponses(s.id) || []).length > 0;
   if (hasResp) {
@@ -130,10 +135,11 @@ function edit(s) {
   }
   router.push({ name: "survey-edit", params: { id: s.id } });
 }
+// Cambiar estado de encuesta
 function toggleStatus(s) {
   setActive(s.id, !s.active);
 }
-
+// Confirmar eliminación de encuesta
 function confirmDelete(s) {
   toDelete.value = s;
   if (dlg.value?.showModal) dlg.value.showModal();
@@ -141,6 +147,7 @@ function confirmDelete(s) {
 function closeDialog() {
   dlg.value?.close?.();
 }
+// Eliminar encuesta
 function doDelete() {
   if (toDelete.value) removeSurvey(toDelete.value.id);
   toDelete.value = null;
@@ -163,7 +170,7 @@ onBeforeUnmount(() => {
   }
 });
 
-function goTo(key){
-  router.push(`/${key}`)
+function goTo(key) {
+  router.push(`/${key}`);
 }
 </script>

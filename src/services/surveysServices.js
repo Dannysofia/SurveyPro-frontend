@@ -1,14 +1,14 @@
-// Servicios HTTP para encuestas (solo llamadas a API)
-// Usa la instancia axios de src/api.js
+// Servicios para encuestas CRUD y gestión de preguntas/opciones
+
 import { api } from "@/api";
 
 export async function listSurveys(params = {}) {
   return api.get("/encuestas", { params }).then((r) => r.data);
 }
 
-export async function getSurveyById(id) {
+/*export async function getSurveyById(id) {
   return api.get(`/encuestas/${id}`).then((r) => r.data);
-}
+}*/
 
 export async function getSurveyDetail(id) {
   return api.get(`/encuestas/${id}/detalle`).then((r) => r.data);
