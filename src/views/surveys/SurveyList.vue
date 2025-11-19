@@ -42,9 +42,6 @@
 
     <div v-if="items.length === 0" class="empty">
       <p>No hay encuestas todavia.</p>
-      <button class="btn btn-primary" @click="goCreate">
-        Crear la primera
-      </button>
     </div>
 
     <div v-else class="grid">

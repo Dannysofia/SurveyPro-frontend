@@ -101,7 +101,6 @@ export function useSurveys() {
         type_id: typeId,
         question_text: q.text?.trim() || "",
         is_required: !!q.required,
-        help_text: null,
         position: i,
       });
 
@@ -307,7 +306,6 @@ export function useSurveys() {
           type_id: typeId,
           question_text: q.text?.trim() || "",
           is_required: !!q.required,
-          help_text: null,
           position: i,
         });
 
@@ -331,7 +329,6 @@ export function useSurveys() {
           type_id: typeId,
           question_text: q.text?.trim() || "",
           is_required: !!q.required,
-          help_text: null,
           position: i,
         });
 
